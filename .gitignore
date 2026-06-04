@@ -1,0 +1,16 @@
+# Carpetas de compilación
+build/
+cmake-build-debug/
+cmake-build-release/
+
+# Archivos compilados
+*.o
+*.obj
+*.exe
+*.out
+
+# Configuración local de VS Code
+.vscode/
+
+# Archivos temporales
+*.log
