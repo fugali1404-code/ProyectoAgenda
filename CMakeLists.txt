@@ -3,15 +3,45 @@ cmake_minimum_required(VERSION 3.10)
 project(AgendaAcademica)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(include)
+# ==========================
+# Directorios de inclusión
+# ==========================
+
+include_directories(
+    include
+)
+
+# ==========================
+# SFML (MSYS2)
+# ==========================
+
+set(
+    CMAKE_PREFIX_PATH
+    "C:/msys64/ucrt64"
+)
+
+find_package(
+    SFML 3 REQUIRED
+    COMPONENTS
+        Graphics
+        Window
+        System
+)
+
+# ==========================
+# Ejecutable principal
+# ==========================
 
 add_executable(
 
     AgendaAcademica
 
-    src/mainPrueba.cpp
+    # Main
+    src/SFML/mainSFML.cpp
 
+    # Modelo
     src/usuario.cpp
     src/alumno.cpp
     src/profesor.cpp
@@ -23,4 +53,26 @@ add_executable(
 
     src/plannerDia.cpp
     src/plannerSemana.cpp
+
+    # Persistencia
+    src/persistencia.cpp
+    src/notificaciones.cpp
+    src/mensaje.cpp
+
+    # SFML
+    src/SFML/login.cpp
+    src/SFML/dashboard.cpp
+    src/SFML/planner.cpp
+)
+
+# ==========================
+# Librerías
+# ==========================
+
+target_link_libraries(
+    AgendaAcademica
+    PRIVATE
+        SFML::Graphics
+        SFML::Window
+        SFML::System
 )

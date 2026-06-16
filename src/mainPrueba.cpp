@@ -1,64 +1,25 @@
-// main.cpp
-
-#include <iostream>
-
-#include "alumno.hpp"
-#include "profesor.hpp"
-#include "materia.hpp"
-#include "tarea.hpp"
-#include "subtarea.hpp"
+// src/mainPrueba.cpp
+/*
+#include <SFML/Graphics.hpp>
 
 int main()
 {
-    Profesor prof(
-        1,
-        "Juan Perez",
-        "juan@escuela.com",
-        "1234");
+    sf::RenderWindow window(
+        sf::VideoMode({800, 600}),
+        "Prueba SFML"
+    );
 
-    Alumno alumno(
-        1,
-        "Ana Lopez",
-        "ana@escuela.com",
-        "1234");
+    while(window.isOpen())
+    {
+        while(const auto event = window.pollEvent())
+        {
+            if(event->is<sf::Event::Closed>())
+                window.close();
+        }
 
-    Materia programacion(
-        1,
-        "Programacion",
-        prof.getId());
-
-    Tarea tarea(
-        1,
-        "Proyecto Final",
-        "Sistema Academico",
-        "15/07/2026",
-        Prioridad::ALTA);
-
-    tarea.agregarSubtarea(
-        Subtarea(
-            1,
-            "Disenar UML"));
-
-    tarea.agregarSubtarea(
-        Subtarea(
-            2,
-            "Implementar clases"));
-
-    programacion.agregarAlumno(
-        alumno.getId());
-
-    programacion.agregarTarea(
-        tarea);
-
-    std::cout
-        << "Materia: "
-        << programacion.getNombre()
-        << std::endl;
-
-    std::cout
-        << "Tarea: "
-        << tarea.getTitulo()
-        << std::endl;
+        window.clear();
+        window.display();
+    }
 
     return 0;
-}
+} */
