@@ -1,18 +1,13 @@
-#ifndef SERVIDOR_HPP
-#define SERVIDOR_HPP
+#pragma once
 
 #include <vector>
-#include <mutex>
+#include <string>
 
 class Servidor
 {
 private:
 
     int serverSocket;
-
-    std::vector<int> clientes;
-
-    std::mutex clientesMutex;
 
 public:
 
@@ -22,13 +17,7 @@ public:
         int puerto
     );
 
-    void aceptarClientes();
-
-    void enviarATodos(
-        const std::string& mensaje
-    );
+    int aceptarCliente();
 
     void cerrar();
 };
-
-#endif

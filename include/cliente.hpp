@@ -1,5 +1,4 @@
-#ifndef CLIENTE_HPP
-#define CLIENTE_HPP
+#pragma once
 
 #include <string>
 
@@ -18,7 +17,7 @@ public:
         int puerto
     );
 
-    void enviar(
+    bool enviar(
         const std::string& mensaje
     );
 
@@ -26,5 +25,3 @@ public:
 
     void desconectar();
 };
-
-#endif

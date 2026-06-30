@@ -35,7 +35,6 @@ find_package(
 # ==========================
 
 add_executable(
-
     AgendaAcademica
 
     # Main
@@ -48,11 +47,15 @@ add_executable(
 
     src/subtarea.cpp
     src/tarea.cpp
-
     src/materia.cpp
 
     src/plannerDia.cpp
     src/plannerSemana.cpp
+
+    # Red
+    src/cliente.cpp
+    src/servidor.cpp
+    #src/networkmaneger.cpp
 
     # Persistencia
     src/persistencia.cpp
@@ -66,7 +69,7 @@ add_executable(
 )
 
 # ==========================
-# Librerías
+# Librerías del proyecto principal
 # ==========================
 
 target_link_libraries(
@@ -75,4 +78,37 @@ target_link_libraries(
         SFML::Graphics
         SFML::Window
         SFML::System
+        ws2_32
+)
+
+# ==========================
+# Ejecutable de prueba: servidor
+# ==========================
+
+add_executable(
+    PruebaServidor
+    src/pruebas/mainServidor.cpp
+    src/servidor.cpp
+)
+
+target_link_libraries(
+    PruebaServidor
+    PRIVATE
+        ws2_32
+)
+
+# ==========================
+# Ejecutable de prueba: cliente
+# ==========================
+
+add_executable(
+    PruebaCliente
+    src/pruebas/mainCliente.cpp
+    src/cliente.cpp
+)
+
+target_link_libraries(
+    PruebaCliente
+    PRIVATE
+        ws2_32
 )
