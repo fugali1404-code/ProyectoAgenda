@@ -13,11 +13,19 @@ public:
 
     Servidor();
 
-    bool iniciar(
-        int puerto
-    );
+    bool iniciar(int puerto);
 
     int aceptarCliente();
+
+    bool recibirMensaje(
+        int clienteSocket,
+        std::string& mensaje
+    );
+    
+    bool enviarMensaje(
+    int clienteSocket,
+    const std::string& mensaje
+    );
 
     void cerrar();
 };

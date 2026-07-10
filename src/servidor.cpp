@@ -1,72 +1,76 @@
 #include "servidor.hpp"
 
 #ifdef _WIN32
-
-#include <winsock2.h>
-#include <ws2tcpip.h>
-
-#pragma comment(lib,"ws2_32.lib")
-
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
 #else
-
-#include <arpa/inet.h>
-#include <unistd.h>
-
+    #include <arpa/inet.h>
+    #include <unistd.h>
 #endif
 
 #include <iostream>
+#include <string>
 
 Servidor::Servidor()
 {
     serverSocket = -1;
 
 #ifdef _WIN32
-
     WSADATA wsaData;
 
-    WSAStartup(
-        MAKEWORD(2,2),
-        &wsaData
-    );
+    int resultado = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
+    if (resultado != 0)
+    {
+        std::cerr << "Error en WSAStartup: " << resultado << std::endl;
+    }
 #endif
 }
 
 bool Servidor::iniciar(int puerto)
 {
-    serverSocket =
-        socket(AF_INET,SOCK_STREAM,0);
+    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
-    if(serverSocket < 0)
-        return false;
-
-    sockaddr_in direccion;
-
-    direccion.sin_family = AF_INET;
-    direccion.sin_addr.s_addr =
-        INADDR_ANY;
-
-    direccion.sin_port =
-        htons(puerto);
-
-    if(
-        bind(
-            serverSocket,
-            (sockaddr*)&direccion,
-            sizeof(direccion)
-        ) < 0
-    )
+#ifdef _WIN32
+    if (serverSocket == INVALID_SOCKET)
+#else
+    if (serverSocket < 0)
+#endif
     {
+        std::cerr << "Error al crear el socket." << std::endl;
         return false;
     }
 
-    if(
-        listen(
+    sockaddr_in direccion{};
+    direccion.sin_family = AF_INET;
+    direccion.sin_addr.s_addr = INADDR_ANY;
+    direccion.sin_port = htons(puerto);
+
+    int opcion = 1;
+
+    setsockopt(
+        serverSocket,
+        SOL_SOCKET,
+        SO_REUSEADDR,
+        reinterpret_cast<const char*>(&opcion),
+        sizeof(opcion)
+    );
+
+    if (bind(
             serverSocket,
-            5
-        ) < 0
-    )
+            reinterpret_cast<sockaddr*>(&direccion),
+            sizeof(direccion)
+        ) < 0)
     {
+        std::cerr << "Error en bind()." << std::endl;
+        cerrar();
+        return false;
+    }
+
+    if (listen(serverSocket, 5) < 0)
+    {
+        std::cerr << "Error en listen()." << std::endl;
+        cerrar();
         return false;
     }
 
@@ -75,40 +79,94 @@ bool Servidor::iniciar(int puerto)
 
 int Servidor::aceptarCliente()
 {
-    sockaddr_in cliente;
+    sockaddr_in cliente{};
 
 #ifdef _WIN32
-
-    int tam =
-        sizeof(cliente);
-
+    int tamCliente = sizeof(cliente);
 #else
-
-    socklen_t tam =
-        sizeof(cliente);
-
+    socklen_t tamCliente = sizeof(cliente);
 #endif
 
-    int clienteSocket =
-        accept(
-            serverSocket,
-            (sockaddr*)&cliente,
-            &tam
-        );
+    int socketCliente = accept(
+        serverSocket,
+        reinterpret_cast<sockaddr*>(&cliente),
+        &tamCliente
+    );
 
-    return clienteSocket;
+#ifdef _WIN32
+    if (socketCliente == INVALID_SOCKET)
+#else
+    if (socketCliente < 0)
+#endif
+    {
+        std::cerr << "Error al aceptar cliente." << std::endl;
+        return -1;
+    }
+
+    return socketCliente;
+}
+
+bool Servidor::recibirMensaje(
+    int clienteSocket,
+    std::string& mensaje
+)
+{
+    char buffer[1024];
+
+    int bytesRecibidos = recv(
+        clienteSocket,
+        buffer,
+        sizeof(buffer) - 1,
+        0
+    );
+
+    if (bytesRecibidos <= 0)
+    {
+        return false;
+    }
+
+    buffer[bytesRecibidos] = '\0';
+
+    mensaje = buffer;
+
+    return true;
 }
 
 void Servidor::cerrar()
 {
 #ifdef _WIN32
 
-    closesocket(serverSocket);
+    if (serverSocket != INVALID_SOCKET &&
+        serverSocket != -1)
+    {
+        closesocket(serverSocket);
+        serverSocket = -1;
+    }
+
     WSACleanup();
 
 #else
 
-    close(serverSocket);
+    if (serverSocket >= 0)
+    {
+        close(serverSocket);
+        serverSocket = -1;
+    }
 
 #endif
+}
+
+bool Servidor::enviarMensaje(
+    int clienteSocket,
+    const std::string& mensaje
+)
+{
+    int enviados = send(
+        clienteSocket,
+        mensaje.c_str(),
+        static_cast<int>(mensaje.size()),
+        0
+    );
+
+    return enviados > 0;
 }

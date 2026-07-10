@@ -1,4 +1,6 @@
 #include "servidor.hpp"
+#include "protocolo.hpp"
+#include "commandprocessor.hpp"
 
 #include <iostream>
 
@@ -6,25 +8,66 @@ int main()
 {
     Servidor servidor;
 
-    if (!servidor.iniciar(54000))
+    if(!servidor.iniciar(54000))
     {
-        std::cerr << "Error: no se pudo iniciar el servidor.\n";
+        std::cout
+            << "Error al iniciar servidor.\n";
+
         return 1;
     }
 
-    std::cout << "Servidor iniciado en el puerto 54000.\n";
-    std::cout << "Esperando cliente...\n";
+    std::cout
+        << "Servidor iniciado.\n";
 
-    int socketCliente = servidor.aceptarCliente();
+    std::cout
+        << "Esperando cliente...\n";
 
-    if (socketCliente < 0)
+    int cliente =
+        servidor.aceptarCliente();
+
+    if(cliente < 0)
     {
-        std::cerr << "Error: no se pudo aceptar al cliente.\n";
         servidor.cerrar();
         return 1;
     }
 
-    std::cout << "Cliente conectado correctamente.\n";
+    std::cout
+        << "Cliente conectado.\n";
+
+    std::string mensaje;
+
+    if(
+        servidor.recibirMensaje(
+            cliente,
+            mensaje
+        )
+    )
+    {
+        std::cout
+            << "\nMensaje recibido:\n"
+            << mensaje
+            << "\n";
+
+        auto datos =
+            Protocol::dividir(
+                mensaje
+            );
+
+        std::string respuesta =
+            CommandProcessor::procesar(
+                datos
+            );
+
+        std::cout
+            << "\nRespuesta:\n"
+            << respuesta
+            << "\n";
+
+        servidor.enviarMensaje(
+            cliente,
+            respuesta
+        );
+    }
 
     servidor.cerrar();
 

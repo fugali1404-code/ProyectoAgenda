@@ -55,7 +55,9 @@ add_executable(
     # Red
     src/cliente.cpp
     src/servidor.cpp
-    #src/networkmaneger.cpp
+    src/networkmanager.cpp
+    src/protocolo.cpp
+    src/commandprocessor.cpp
 
     # Persistencia
     src/persistencia.cpp
@@ -89,6 +91,8 @@ add_executable(
     PruebaServidor
     src/pruebas/mainServidor.cpp
     src/servidor.cpp
+    src/protocolo.cpp
+    src/commandprocessor.cpp
 )
 
 target_link_libraries(
@@ -109,6 +113,21 @@ add_executable(
 
 target_link_libraries(
     PruebaCliente
+    PRIVATE
+        ws2_32
+)
+
+add_executable(
+    PruebaNetwork
+    src/pruebas/mainNetwork.cpp
+    src/networkmanager.cpp
+    src/cliente.cpp
+    src/protocolo.cpp
+    src/commandprocessor.cpp
+)
+
+target_link_libraries(
+    PruebaNetwork
     PRIVATE
         ws2_32
 )
