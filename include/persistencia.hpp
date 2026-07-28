@@ -4,29 +4,31 @@
 #include <string>
 #include <vector>
 
-#include "Usuario.hpp"
-#include "Materia.hpp"
-#include "Tarea.hpp"
+#include "materia.hpp"
+#include "tarea.hpp"
+#include "usuario.hpp"
 
 class Persistencia
 {
 public:
 
-    Persistencia();
+    //==============================
+    // TAREAS
+    //==============================
 
-    // Usuarios
-
-    static bool guardarUsuarios(
-        const std::vector<Usuario*>& usuarios,
+    static bool guardarTareas(
+        const std::vector<Tarea>& tareas,
         const std::string& archivo
     );
 
-    static bool cargarUsuarios(
-        std::vector<Usuario*>& usuarios,
+    static bool cargarTareas(
+        std::vector<Tarea>& tareas,
         const std::string& archivo
     );
 
-    // Materias
+    //==============================
+    // MATERIAS
+    //==============================
 
     static bool guardarMaterias(
         const std::vector<Materia>& materias,
@@ -38,17 +40,34 @@ public:
         const std::string& archivo
     );
 
-    // Tareas
+    //==============================
+    // USUARIOS
+    //==============================
 
-    static bool guardarTareas(
-        const std::vector<Tarea>& tareas,
+    static bool guardarUsuarios(
+        const std::vector<Usuario*>& usuarios,
         const std::string& archivo
     );
 
-    static bool cargarTareas(
-        std::vector<Tarea>& tareas,
+    static bool cargarUsuarios(
+        std::vector<Usuario*>& usuarios,
         const std::string& archivo
     );
+
+private:
+
+    //==============================
+    // Conversión de prioridad
+    //==============================
+
+    static std::string prioridadAString(
+        Prioridad prioridad
+    );
+
+    static Prioridad stringAPrioridad(
+        const std::string& texto
+    );
+
 };
 
 #endif

@@ -32,6 +32,9 @@ public:
     void setCorreo(const std::string& correo);
 
     virtual std::string getRol() const = 0;
+
+    std::string getPassword() const;
+    
 };
 
 #endif

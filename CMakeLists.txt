@@ -58,6 +58,8 @@ add_executable(
     src/networkmanager.cpp
     src/protocolo.cpp
     src/commandprocessor.cpp
+    src/sessionmaneger.cpp
+    src/sessiondata.cpp
 
     # Persistencia
     src/persistencia.cpp
@@ -68,6 +70,7 @@ add_executable(
     src/SFML/login.cpp
     src/SFML/dashboard.cpp
     src/SFML/planner.cpp
+    src/SFML/textbox.cpp
 )
 
 # ==========================
@@ -89,10 +92,29 @@ target_link_libraries(
 
 add_executable(
     PruebaServidor
+
     src/pruebas/mainServidor.cpp
+
     src/servidor.cpp
     src/protocolo.cpp
     src/commandprocessor.cpp
+    src/sessionmaneger.cpp
+    src/sessiondata.cpp
+
+    # Persistencia
+    src/persistencia.cpp
+
+    # Modelo
+    src/usuario.cpp
+    src/alumno.cpp
+    src/profesor.cpp
+
+    src/subtarea.cpp
+    src/tarea.cpp
+    src/materia.cpp
+
+    src/plannerDia.cpp
+    src/plannerSemana.cpp
 )
 
 target_link_libraries(
@@ -117,17 +139,76 @@ target_link_libraries(
         ws2_32
 )
 
+
+# ==========================
+# Ejecutable de prueba: network
+# ==========================
+
 add_executable(
     PruebaNetwork
+
     src/pruebas/mainNetwork.cpp
+
     src/networkmanager.cpp
     src/cliente.cpp
     src/protocolo.cpp
+
     src/commandprocessor.cpp
+    src/sessionmaneger.cpp
+    src/sessiondata.cpp
+
+    # Persistencia
+    src/persistencia.cpp
+
+    # Modelo
+    src/usuario.cpp
+    src/alumno.cpp
+    src/profesor.cpp
+
+    src/subtarea.cpp
+    src/tarea.cpp
+    src/materia.cpp
+
+    src/plannerDia.cpp
+    src/plannerSemana.cpp
 )
 
 target_link_libraries(
     PruebaNetwork
+    PRIVATE
+        ws2_32
+)
+
+# ==========================
+# Prueba Persistencia
+# ==========================
+
+add_executable(
+    PruebaPersistencia
+
+    src/pruebas/PruebaPersistencia.cpp
+
+    # Persistencia
+    src/persistencia.cpp
+
+    # Modelo
+    src/usuario.cpp
+    src/alumno.cpp
+    src/profesor.cpp
+
+    src/subtarea.cpp
+    src/tarea.cpp
+    src/materia.cpp
+
+    src/plannerDia.cpp
+    src/plannerSemana.cpp
+
+    # Sesión
+    src/sessiondata.cpp
+)
+
+target_link_libraries(
+    PruebaPersistencia
     PRIVATE
         ws2_32
 )

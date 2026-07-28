@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "Tarea.hpp"
+#include "tarea.hpp"
 
 class Materia
 {
@@ -38,10 +38,40 @@ public:
         const Tarea& tarea
     );
 
+    //=====================
+    // GETTERS
+    //=====================
+
+    int getId() const;
+
     std::string getNombre() const;
+
+    int getProfesorId() const;
+
+    const std::vector<int>&
+    getAlumnos() const;
 
     std::vector<Tarea>&
     getTareas();
+
+    const std::vector<Tarea>&
+    getTareas() const;
+
+    //=====================
+    // SETTERS
+    //=====================
+
+    void setNombre(
+        const std::string& nombre
+    );
+
+    void setId(
+        int id
+    );
+
+    void setProfesorId(
+        int profesorId
+    );
 };
 
 #endif

@@ -1,75 +1,71 @@
 #include "servidor.hpp"
 #include "protocolo.hpp"
 #include "commandprocessor.hpp"
+#include "sessionmaneger.hpp"
 
 #include <iostream>
+#include <string>
 
 int main()
 {
     Servidor servidor;
 
-    if(!servidor.iniciar(54000))
+    if (!servidor.iniciar(54000))
     {
-        std::cout
-            << "Error al iniciar servidor.\n";
-
+        std::cout << "Error al iniciar servidor.\n";
         return 1;
     }
 
-    std::cout
-        << "Servidor iniciado.\n";
+    std::cout << "Servidor iniciado.\n";
+    std::cout << "Esperando cliente...\n";
 
-    std::cout
-        << "Esperando cliente...\n";
+    int cliente = servidor.aceptarCliente();
 
-    int cliente =
-        servidor.aceptarCliente();
-
-    if(cliente < 0)
+    if (cliente < 0)
     {
         servidor.cerrar();
         return 1;
     }
 
-    std::cout
-        << "Cliente conectado.\n";
+    std::cout << "Cliente conectado.\n";
 
-    std::string mensaje;
+    SessionManager session;
 
-    if(
-        servidor.recibirMensaje(
-            cliente,
-            mensaje
-        )
-    )
+    while (true)
     {
-        std::cout
-            << "\nMensaje recibido:\n"
-            << mensaje
-            << "\n";
+        std::string mensaje;
 
-        auto datos =
-            Protocol::dividir(
-                mensaje
-            );
+        if (!servidor.recibirMensaje(cliente, mensaje))
+        {
+            std::cout << "\nCliente desconectado.\n";
+            break;
+        }
+
+        std::cout << "\n=============================\n";
+        std::cout << "Mensaje recibido:\n";
+        std::cout << mensaje << std::endl;
+
+        auto datos = Protocol::dividir(mensaje);
 
         std::string respuesta =
             CommandProcessor::procesar(
-                datos
+                datos,
+                session
             );
 
-        std::cout
-            << "\nRespuesta:\n"
-            << respuesta
-            << "\n";
+        std::cout << "\nRespuesta:\n";
+        std::cout << respuesta << std::endl;
 
-        servidor.enviarMensaje(
-            cliente,
-            respuesta
-        );
+        if (!servidor.enviarMensaje(cliente, respuesta))
+        {
+            std::cout << "Error al enviar respuesta.\n";
+            break;
+        }
     }
 
     servidor.cerrar();
+
+    std::cout << "\nServidor finalizado.\n";
 
     return 0;
 }

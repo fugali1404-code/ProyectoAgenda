@@ -48,3 +48,8 @@ void Usuario::setCorreo(
 {
     this->correo = correo;
 }
+
+std::string Usuario::getPassword() const
+{
+    return password;
+}
