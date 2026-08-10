@@ -19,10 +19,34 @@ int main()
         return 1;
     }
 
+    std::string mensaje;   
+    std::string respuesta; 
+
+/*
+
+    std::cout << network.enviarComando("LOGIN|admin@agenda.com|admin123") << std::endl;
+
+
+    std::cout << "\n===== USUARIOS =====\n";
+    std::cout << network.enviarComando("GET_USUARIOS") << std::endl;
+
+    std::cout<< "\n===== AGREGANDO =====\n";
+    std::cout<< network.enviarComando("ADD_USUARIO|Alumno|Carlos Ruiz|carlos@gmail.com|123456")
+    << std::endl;
+
+    std::cout << "\n===== USUARIOS =====\n";
+    std::cout << network.enviarComando("GET_USUARIOS")<< std::endl;
+
+    std::cout<< network.enviarComando("UPDATE_USUARIO|3|Carlos Alberto|carlos@gmail.com")
+    << std::endl;   
+
+    std::cout << network.enviarComando( "DELETE_USUARIO|3") << std::endl;
+
+    */
+
     std::cout << "Conexion establecida.\n\n";
 
-    std::string mensaje;
-    std::string respuesta;
+    
 
     while (true)
     {

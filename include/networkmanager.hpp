@@ -32,6 +32,10 @@ public:
         std::string& respuesta
     );
 
+    std::string enviarComando(
+      const std::string& comando
+    );
+
     void desconectar();
 
     bool estaConectado() const;

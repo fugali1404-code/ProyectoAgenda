@@ -7,6 +7,7 @@
 #include "materia.hpp"
 #include "tarea.hpp"
 #include "usuario.hpp"
+#include "administrador.hpp"
 
 class Persistencia
 {
@@ -26,33 +27,63 @@ public:
         const std::string& archivo
     );
 
-    //==============================
+    ///////////////////////////////////////////////////////////
     // MATERIAS
-    //==============================
+    ///////////////////////////////////////////////////////////
 
     static bool guardarMaterias(
+        int profesorId,
         const std::vector<Materia>& materias,
-        const std::string& archivo
+        const std::string& archivo = "materias.txt"
     );
 
     static bool cargarMaterias(
         std::vector<Materia>& materias,
+        const std::string& archivo = "materias.txt"
+    );
+
+    static int generarIdMateria(
         const std::string& archivo
     );
 
-    //==============================
-    // USUARIOS
-    //==============================
+    ///////////////////////////////////////////////////////////
+    //Usuarios
+    ///////////////////////////////////////////////////////////
 
     static bool guardarUsuarios(
         const std::vector<Usuario*>& usuarios,
-        const std::string& archivo
+        const std::string& archivo = "usuarios.txt"
     );
 
     static bool cargarUsuarios(
         std::vector<Usuario*>& usuarios,
-        const std::string& archivo
+        const std::string& archivo = "usuarios.txt"
     );
+
+
+    static Usuario* autenticarUsuario(
+    const std::string& correo,
+    const std::string& password,
+    const std::string& archivo = "usuarios.txt"
+    );
+
+
+    static bool agregarUsuario(
+        const Usuario& usuario,
+        const std::string& archivo = "usuarios.txt"
+    );
+
+    static bool actualizarUsuario(
+        const Usuario& usuario,
+        const std::string& archivo = "usuarios.txt");
+
+    static bool eliminarUsuario(
+        int idUsuario,
+        const std::string& archivo = "usuarios.txt");
+
+    static int generarIdUsuario(
+        const std::string& archivo = "usuarios.txt");
+
 
 private:
 

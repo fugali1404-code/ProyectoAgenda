@@ -44,6 +44,7 @@ add_executable(
     src/usuario.cpp
     src/alumno.cpp
     src/profesor.cpp
+    src/administrador.cpp
 
     src/subtarea.cpp
     src/tarea.cpp
@@ -108,6 +109,7 @@ add_executable(
     src/usuario.cpp
     src/alumno.cpp
     src/profesor.cpp
+    src/administrador.cpp
 
     src/subtarea.cpp
     src/tarea.cpp
@@ -164,6 +166,7 @@ add_executable(
     src/usuario.cpp
     src/alumno.cpp
     src/profesor.cpp
+    src/administrador.cpp
 
     src/subtarea.cpp
     src/tarea.cpp
@@ -179,36 +182,4 @@ target_link_libraries(
         ws2_32
 )
 
-# ==========================
-# Prueba Persistencia
-# ==========================
 
-add_executable(
-    PruebaPersistencia
-
-    src/pruebas/PruebaPersistencia.cpp
-
-    # Persistencia
-    src/persistencia.cpp
-
-    # Modelo
-    src/usuario.cpp
-    src/alumno.cpp
-    src/profesor.cpp
-
-    src/subtarea.cpp
-    src/tarea.cpp
-    src/materia.cpp
-
-    src/plannerDia.cpp
-    src/plannerSemana.cpp
-
-    # Sesión
-    src/sessiondata.cpp
-)
-
-target_link_libraries(
-    PruebaPersistencia
-    PRIVATE
-        ws2_32
-)

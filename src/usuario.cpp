@@ -7,14 +7,21 @@ Usuario::Usuario()
 }
 
 Usuario::Usuario(
+
     int id,
     const std::string& nombre,
     const std::string& correo,
-    const std::string& password)
+    const std::string& password,
+    const std::string& identificador
+    )
+
+
     : id(id),
       nombre(nombre),
       correo(correo),
-      password(password)
+      password(password),
+      identificador(identificador)
+
 {
 }
 
@@ -49,7 +56,30 @@ void Usuario::setCorreo(
     this->correo = correo;
 }
 
+void Usuario::setId(
+    int id)
+{
+    this->id = id;
+}
+
+void Usuario::setPassword(
+    const std::string& password)
+{
+    this->password = password;
+}
+
 std::string Usuario::getPassword() const
 {
     return password;
+}
+
+std::string Usuario::getIdentificador() const
+{
+    return identificador;
+}
+
+void Usuario::setIdentificador(
+    const std::string& identificador)
+{
+    this->identificador = identificador;
 }

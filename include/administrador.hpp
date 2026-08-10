@@ -1,15 +1,15 @@
-#ifndef ALUMNO_HPP
-#define ALUMNO_HPP
+#ifndef ADMINISTRADOR_HPP
+#define ADMINISTRADOR_HPP
 
-#include "Usuario.hpp"
+#include "usuario.hpp"
 
-class Alumno : public Usuario
+class Administrador : public Usuario
 {
 public:
 
-    Alumno();
+    Administrador();
 
-    Alumno(
+    Administrador(
         int id,
         const std::string& nombre,
         const std::string& correo,

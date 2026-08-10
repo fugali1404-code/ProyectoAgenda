@@ -62,3 +62,24 @@ bool NetworkManager::enviarYRecibir(
 
     return !respuesta.empty();
 }
+
+std::string NetworkManager::enviarComando(
+    const std::string& comando
+)
+{
+    if(!conectado)
+    {
+        return "NO_CONECTADO";
+    }
+
+    std::string respuesta;
+
+    if(!enviarYRecibir(
+            comando,
+            respuesta))
+    {
+        return "ERROR_RED";
+    }
+
+    return respuesta;
+}

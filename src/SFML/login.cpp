@@ -56,7 +56,7 @@ void LoginView::draw(
     sf::Text usuario(font);
 
     usuario.setString(
-        "Usuario"
+        "Correo"
     );
 
     usuario.setCharacterSize(22);

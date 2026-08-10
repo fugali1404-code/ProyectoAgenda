@@ -11,13 +11,9 @@ class Materia
 private:
 
     int id;
-
     std::string nombre;
-
     int profesorId;
-
     std::vector<int> alumnos;
-
     std::vector<Tarea> tareas;
 
 public:

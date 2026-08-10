@@ -4,7 +4,7 @@
 SessionData::SessionData()
 {
     autenticado = false;
-    cargarDatos();
+    usuarioId = -1;
 }
 
 bool SessionData::estaAutenticado() const
@@ -31,48 +31,33 @@ void SessionData::setUsuario(
     this->usuario = usuario;
 }
 
+
+
 void SessionData::limpiar()
 {
     autenticado = false;
-
+    usuarioId = -1;
     usuario.clear();
-
+    nombreCompleto.clear();
+    identificador.clear();
     materias.clear();
-
-    planner = PlannerSemana();
+    rol.clear();
+    
 }
 
 bool SessionData::agregarMateria(
-    const std::string& nombre)
+    const Materia& materia
+)
 {
-    for(const auto& materia : materias)
+    for(const auto& m : materias)
     {
-        if(materia.getNombre() == nombre)
-            return false;
-    }
-
-    Materia nueva;
-
-    int nuevoId = 1;
-
-    for(const auto& materia : materias)
-    {
-        if(materia.getId() >= nuevoId)
+        if(m.getNombre() == materia.getNombre())
         {
-            nuevoId =
-            materia.getId() + 1;
+            return false;
         }
     }
 
-    nueva.setId(nuevoId);
-
-    nueva.setNombre(nombre);
-
-    nueva.setProfesorId(0);
-
-    materias.push_back(nueva);
-
-    guardarDatos();
+    materias.push_back(materia);
 
     return true;
 }
@@ -80,13 +65,22 @@ bool SessionData::agregarMateria(
 std::string SessionData::obtenerMaterias() const
 {
     if(materias.empty())
+    {
         return "SIN_MATERIAS";
+    }
 
     std::string lista;
 
     for(const auto& materia : materias)
     {
+        lista += std::to_string(materia.getId());
+        lista += "|";
+
         lista += materia.getNombre();
+        lista += "|";
+
+        lista += std::to_string(materia.getProfesorId());
+
         lista += ";";
     }
 
@@ -106,61 +100,74 @@ SessionData::obtenerVectorMaterias()
 }
 
 
-void SessionData::cargarDatos()
-{
-    Persistencia::cargarMaterias(
-        materias,
-        "materias.txt"
-    );
-
-    std::vector<Tarea> tareas;
-
-    Persistencia::cargarTareas(
-        tareas,
-        "tareas.txt"
-    );
-
-    for(const auto& tarea : tareas)
-    {
-        for(auto& materia : materias)
-        {
-            if(materia.getId() ==
-               tarea.getMateriaId())
-            {
-                materia.agregarTarea(
-                    tarea
-                );
-
-                break;
-            }
-        }
-    }
-}
-
-
 void SessionData::guardarDatos()
 {
     Persistencia::guardarMaterias(
+        usuarioId,
         materias,
         "materias.txt"
     );
+}
 
-    std::vector<Tarea> todasLasTareas;
+void SessionData::setNombreCompleto(
+    const std::string& nombre
+)
+{
+    nombreCompleto = nombre;
+}
 
-    for(const auto& materia : materias)
-    {
-        for(const auto& tarea :
-            materia.getTareas())
-        {
-            todasLasTareas.push_back(
-                tarea
-            );
-        }
-    }
+std::string SessionData::obtenerNombreCompleto() const
+{
+    return nombreCompleto;
+}
 
-    Persistencia::guardarTareas(
-        todasLasTareas,
-        "tareas.txt"
-    );
+void SessionData::setIdentificador(
+    const std::string& identificador
+)
+{
+    this->identificador = identificador;
+}
+
+std::string SessionData::obtenerIdentificador() const
+{
+    return identificador;
+}
+
+
+
+const std::vector<Materia>&
+SessionData::obtenerVectorMaterias() const
+{
+    return materias;
+}
+
+void SessionData::setUsuarioId(
+    int id
+)
+{
+    usuarioId = id;
+}
+
+int SessionData::obtenerUsuarioId() const
+{
+    return usuarioId;
+}
+
+void SessionData::setRol(
+    const std::string& rol)
+{
+    this->rol = rol;
+}
+
+std::string SessionData::obtenerRol() const
+{
+    return rol;
+}
+
+void SessionData::setMaterias(
+    const std::vector<Materia>& materias
+)
+{
+    this->materias = materias;
 }
 

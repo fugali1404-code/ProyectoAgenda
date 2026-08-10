@@ -2,8 +2,30 @@
 
 DashboardView::DashboardView()
 {
-    nombreAlumno = "Juan Perez";
-    boleta = "2023601234";
+    nombreAlumno = " ";
+    boleta = " ";
+
+    txtNuevaMateria.setPosition(
+        330.f,
+        400.f
+    );
+
+    txtNuevaMateria.setSize(
+        250.f,
+        35.f
+    );
+
+    btnAgregarMateria.setSize(
+        {120.f,35.f}
+    );
+
+    btnAgregarMateria.setPosition(
+        {600.f,400.f}
+    );
+
+    btnAgregarMateria.setFillColor(
+        sf::Color(60,150,80)
+    );
 }
 
 bool DashboardView::cargarFuente(
@@ -18,6 +40,16 @@ void DashboardView::setAlumno(
 {
     nombreAlumno = nombre;
     boleta = boletaAlumno;
+}
+
+void DashboardView::setMaterias(const std::vector<Materia>& lista)
+{
+    Materias = lista;
+}
+
+void DashboardView::limpiarMaterias()
+{
+    Materias.clear();
 }
 
 void DashboardView::draw(
@@ -351,24 +383,107 @@ void DashboardView::draw(
 
     //-----------------------------------
 
+    std::string textoMaterias;
+
+    for(const auto& materia : Materias)
+    {
+        textoMaterias += "• ";
+        textoMaterias += materia.getNombre();
+        textoMaterias += "\n\n";
+    }
+
+    if(textoMaterias.empty())
+    {
+        textoMaterias = "No hay materias registradas.";
+    }
+
     sf::Text listaMaterias(font);
 
-    listaMaterias.setString(
-        "• Programacion Avanzada\n\n"
-        "• Fisica\n\n"
-        "• Ingles\n\n"
-        "• Bases de Datos"
-    );
+    listaMaterias.setString(textoMaterias);
 
     listaMaterias.setCharacterSize(20);
 
-    listaMaterias.setFillColor(
-        textoNegro
-    );
+    listaMaterias.setFillColor(textoNegro);
 
-    listaMaterias.setPosition(
-        {330.f,400.f}
-    );
+    listaMaterias.setPosition({330.f,400.f});
 
     window.draw(listaMaterias);
+
+    //-----------------------------------
+    // NUEVA MATERIA
+    //-----------------------------------
+
+    txtNuevaMateria.draw(
+    window,
+    font
+    );
+
+    window.draw(
+        btnAgregarMateria
+    );
+
+    sf::Text agregar(font);
+
+    agregar.setString(
+        "Agregar"
+    );
+
+    agregar.setCharacterSize(
+        18
+    );
+
+    agregar.setFillColor(
+        sf::Color::White
+    );
+
+    agregar.setPosition(
+        {620.f,405.f}
+    );
+
+    window.draw(agregar);
+}
+
+void DashboardView::manejarEvento(
+    const sf::Event& event,
+    const sf::RenderWindow& window
+)
+{
+    txtNuevaMateria.handleEvent(
+        event,
+        window
+    );
+}
+
+bool DashboardView::botonAgregarPresionado(
+    const sf::RenderWindow& window
+) const
+{
+    if(
+        sf::Mouse::isButtonPressed(
+            sf::Mouse::Button::Left
+        )
+    )
+    {
+        auto posicion =
+            window.mapPixelToCoords(
+                sf::Mouse::getPosition(window)
+            );
+
+        return
+            btnAgregarMateria
+            .getGlobalBounds()
+            .contains(posicion);
+    }
+
+    return false;
+}
+
+std::string DashboardView::obtenerNuevaMateria() const
+{
+    return txtNuevaMateria.getText();
+}
+
+void DashboardView::limpiarNuevaMateria()
+{
+    txtNuevaMateria.clear();
 }
