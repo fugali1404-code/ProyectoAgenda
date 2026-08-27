@@ -1,12 +1,28 @@
 #include "tarea.hpp"
 
+//=====================
+// CONSTRUCTOR
+//=====================
+
 Tarea::Tarea()
 {
     id = 0;
     materiaId = 0;
+    titulo = "";
+    descripcion = "";
+    fechaEntrega = "";
+
+    tipo = TipoTarea::TAREA;
+
+    // Se conserva como estado inicial.
+    // Más adelante el completado real se manejará
+    // por alumno.
     completada = false;
-    prioridad = Prioridad::MEDIA;
 }
+
+//=====================
+// CONSTRUCTOR CON DATOS
+//=====================
 
 Tarea::Tarea(
     int id,
@@ -14,22 +30,33 @@ Tarea::Tarea(
     const std::string& titulo,
     const std::string& descripcion,
     const std::string& fechaEntrega,
-    Prioridad prioridad)
+    TipoTarea tipo
+)
 {
     this->id = id;
     this->materiaId = materiaId;
     this->titulo = titulo;
     this->descripcion = descripcion;
     this->fechaEntrega = fechaEntrega;
-    this->prioridad = prioridad;
-    this->completada = false;
+    this->tipo = tipo;
+
+    completada = false;
 }
 
+//=====================
+// SUBTAREAS
+//=====================
+
 void Tarea::agregarSubtarea(
-    const Subtarea& subtarea)
+    const Subtarea& subtarea
+)
 {
     subtareas.push_back(subtarea);
 }
+
+//=====================
+// COMPLETAR
+//=====================
 
 void Tarea::completar()
 {
@@ -39,16 +66,6 @@ void Tarea::completar()
 //=====================
 // GETTERS
 //=====================
-
-bool Tarea::estaCompletada() const
-{
-    return completada;
-}
-
-bool Tarea::getCompletada() const
-{
-    return completada;
-}
 
 int Tarea::getId() const
 {
@@ -75,9 +92,19 @@ std::string Tarea::getFechaEntrega() const
     return fechaEntrega;
 }
 
-Prioridad Tarea::getPrioridad() const
+TipoTarea Tarea::getTipo() const
 {
-    return prioridad;
+    return tipo;
+}
+
+bool Tarea::estaCompletada() const
+{
+    return completada;
+}
+
+bool Tarea::getCompletada() const
+{
+    return completada;
 }
 
 std::vector<Subtarea>&
@@ -97,43 +124,50 @@ Tarea::getSubtareas() const
 //=====================
 
 void Tarea::setId(
-    int id)
+    int id
+)
 {
     this->id = id;
 }
 
 void Tarea::setMateriaId(
-    int materiaId)
+    int materiaId
+)
 {
     this->materiaId = materiaId;
 }
 
 void Tarea::setTitulo(
-    const std::string& titulo)
+    const std::string& titulo
+)
 {
     this->titulo = titulo;
 }
 
 void Tarea::setDescripcion(
-    const std::string& descripcion)
+    const std::string& descripcion
+)
 {
     this->descripcion = descripcion;
 }
 
 void Tarea::setFechaEntrega(
-    const std::string& fechaEntrega)
+    const std::string& fechaEntrega
+)
 {
     this->fechaEntrega = fechaEntrega;
 }
 
-void Tarea::setPrioridad(
-    Prioridad prioridad)
+void Tarea::setTipo(
+    TipoTarea tipo
+)
 {
-    this->prioridad = prioridad;
+    this->tipo = tipo;
 }
 
 void Tarea::setCompletada(
-    bool completada)
+    bool completada
+)
 {
     this->completada = completada;
 }

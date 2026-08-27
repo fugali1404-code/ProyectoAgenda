@@ -1,31 +1,82 @@
 #include "subtarea.hpp"
 
+////////////////////////////////////////////////////////////
+// Constructor por defecto
+////////////////////////////////////////////////////////////
+
 Subtarea::Subtarea()
     : id(0),
-      completada(false)
+      tareaId(0),
+      alumnoId(0),
+      descripcion(""),
+      estado(EstadoSubtarea::PENDIENTE)
 {
 }
+
+////////////////////////////////////////////////////////////
+// Constructor
+////////////////////////////////////////////////////////////
 
 Subtarea::Subtarea(
     int id,
-    const std::string& descripcion)
+    int tareaId,
+    int alumnoId,
+    const std::string& descripcion
+)
     : id(id),
+      tareaId(tareaId),
+      alumnoId(alumnoId),
       descripcion(descripcion),
-      completada(false)
+      estado(EstadoSubtarea::PENDIENTE)
 {
 }
 
-void Subtarea::completar()
+
+////////////////////////////////////////////////////////////
+// GETTERS
+////////////////////////////////////////////////////////////
+
+int Subtarea::getId() const
 {
-    completada = true;
+    return id;
 }
 
-bool Subtarea::estaCompletada() const
+int Subtarea::getTareaId() const
 {
-    return completada;
+    return tareaId;
+}
+
+int Subtarea::getAlumnoId() const
+{
+    return alumnoId;
 }
 
 std::string Subtarea::getDescripcion() const
 {
     return descripcion;
+}
+
+
+
+EstadoSubtarea Subtarea::getEstado() const
+{
+    return estado;
+}
+
+////////////////////////////////////////////////////////////
+// SETTERS
+////////////////////////////////////////////////////////////
+
+void Subtarea::setDescripcion(
+    const std::string& descripcion
+)
+{
+    this->descripcion = descripcion;
+}
+
+void Subtarea::setEstado(
+    EstadoSubtarea estado
+)
+{
+    this->estado = estado;
 }

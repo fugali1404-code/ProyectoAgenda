@@ -2,30 +2,41 @@
 
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 
-//==================================================
-// Cargar inscripciones
-//==================================================
+//======================================================
+// CARGAR INSCRIPCIONES
+//======================================================
 
 bool Inscripciones::cargar(
-    std::vector<Inscripcion>& inscripciones,
-    const std::string& archivo)
+    std::vector<std::pair<int, std::vector<int>>>& inscripciones,
+    const std::string& archivo
+)
 {
     std::ifstream in(archivo);
 
     if(!in.is_open())
     {
         // Si todavía no existe el archivo,
-        // no hay inscripciones.
+        // no es un error grave.
         inscripciones.clear();
-
         return true;
     }
 
     inscripciones.clear();
 
     std::string linea;
+
+    //==================================================
+    // Ignorar encabezado
+    //==================================================
+
+    std::getline(in, linea);
+
+    //==================================================
+    // Leer registros
+    //==================================================
 
     while(std::getline(in, linea))
     {
@@ -36,47 +47,81 @@ bool Inscripciones::cargar(
 
         std::stringstream ss(linea);
 
-        std::string campo;
+        std::string campoMateria;
+        std::string campoAlumnos;
 
-        Inscripcion inscripcion;
+        //================================================
+        // ID DE MATERIA
+        //================================================
 
-        //==========================================
-        // ID Materia
-        //==========================================
-
-        if(!std::getline(ss, campo, '|'))
+        if(!std::getline(ss, campoMateria, '|'))
         {
             continue;
         }
 
+        //================================================
+        // ALUMNOS
+        //================================================
+
+        if(!std::getline(ss, campoAlumnos))
+        {
+            continue;
+        }
+
+        int idMateria;
+
         try
         {
-            inscripcion.idMateria = std::stoi(campo);
+            idMateria = std::stoi(campoMateria);
         }
         catch(...)
         {
             continue;
         }
 
-        //==========================================
-        // ID Alumno
-        //==========================================
+        std::vector<int> alumnos;
 
-        if(!std::getline(ss, campo, '|'))
+        //================================================
+        // Separar alumnos por coma
+        //================================================
+
+        std::stringstream alumnosStream(campoAlumnos);
+
+        std::string campoAlumno;
+
+        while(std::getline(
+            alumnosStream,
+            campoAlumno,
+            ','
+        ))
         {
-            continue;
+            if(campoAlumno.empty())
+            {
+                continue;
+            }
+
+            try
+            {
+                int idAlumno = std::stoi(campoAlumno);
+
+                alumnos.push_back(idAlumno);
+            }
+            catch(...)
+            {
+                continue;
+            }
         }
 
-        try
-        {
-            inscripcion.idAlumno = std::stoi(campo);
-        }
-        catch(...)
-        {
-            continue;
-        }
+        //================================================
+        // Guardar materia y alumnos
+        //================================================
 
-        inscripciones.push_back(inscripcion);
+        inscripciones.push_back(
+            {
+                idMateria,
+                alumnos
+            }
+        );
     }
 
     in.close();
@@ -85,13 +130,14 @@ bool Inscripciones::cargar(
 }
 
 
-//==================================================
-// Guardar inscripciones
-//==================================================
+//======================================================
+// GUARDAR INSCRIPCIONES
+//======================================================
 
 bool Inscripciones::guardar(
-    const std::vector<Inscripcion>& inscripciones,
-    const std::string& archivo)
+    const std::vector<std::pair<int, std::vector<int>>>& inscripciones,
+    const std::string& archivo
+)
 {
     std::ofstream out(archivo);
 
@@ -100,13 +146,38 @@ bool Inscripciones::guardar(
         return false;
     }
 
-    for(const auto& inscripcion : inscripciones)
+    //==================================================
+    // Encabezado
+    //==================================================
+
+    out << "idMateria|idAlumnos\n";
+
+    //==================================================
+    // Guardar registros
+    //==================================================
+
+    for(const auto& registro : inscripciones)
     {
-        out
-            << inscripcion.idMateria
-            << "|"
-            << inscripcion.idAlumno
-            << "\n";
+        int idMateria = registro.first;
+
+        const std::vector<int>& alumnos =
+            registro.second;
+
+        out << idMateria << "|";
+
+        for(std::size_t i = 0;
+            i < alumnos.size();
+            ++i)
+        {
+            out << alumnos[i];
+
+            if(i + 1 < alumnos.size())
+            {
+                out << ",";
+            }
+        }
+
+        out << "\n";
     }
 
     out.close();
@@ -115,87 +186,66 @@ bool Inscripciones::guardar(
 }
 
 
-//==================================================
-// Inscribir alumno
-//==================================================
+//======================================================
+// INSCRIBIR ALUMNO
+//======================================================
 
 bool Inscripciones::inscribirAlumno(
     int idMateria,
     int idAlumno,
-    const std::string& archivo)
+    const std::string& archivo
+)
 {
-    // IDs inválidos
     if(idMateria <= 0 || idAlumno <= 0)
     {
         return false;
     }
 
-    std::vector<Inscripcion> inscripciones;
+    //==================================================
+    // Cargar datos
+    //==================================================
 
-    if(!cargar(inscripciones, archivo))
-    {
-        return false;
-    }
+    std::vector<
+        std::pair<int, std::vector<int>>
+    > inscripciones;
 
-    //==============================================
-    // Evitar inscripción duplicada
-    //==============================================
-
-    for(const auto& inscripcion : inscripciones)
-    {
-        if(inscripcion.idMateria == idMateria &&
-           inscripcion.idAlumno == idAlumno)
-        {
-            return false;
-        }
-    }
-
-    //==============================================
-    // Crear inscripción
-    //==============================================
-
-    Inscripcion nueva;
-
-    nueva.idMateria = idMateria;
-    nueva.idAlumno = idAlumno;
-
-    inscripciones.push_back(nueva);
-
-    //==============================================
-    // Guardar
-    //==============================================
-
-    return guardar(
+    if(!cargar(
         inscripciones,
         archivo
-    );
-}
-
-
-//==================================================
-// Desinscribir alumno
-//==================================================
-
-bool Inscripciones::desinscribirAlumno(
-    int idMateria,
-    int idAlumno,
-    const std::string& archivo)
-{
-    std::vector<Inscripcion> inscripciones;
-
-    if(!cargar(inscripciones, archivo))
+    ))
     {
         return false;
     }
 
-    for(auto it = inscripciones.begin();
-        it != inscripciones.end();
-        ++it)
+    //==================================================
+    // Buscar materia
+    //==================================================
+
+    for(auto& registro : inscripciones)
     {
-        if(it->idMateria == idMateria &&
-           it->idAlumno == idAlumno)
+        if(registro.first == idMateria)
         {
-            inscripciones.erase(it);
+            std::vector<int>& alumnos =
+                registro.second;
+
+            //==========================================
+            // Verificar duplicado
+            //==========================================
+
+            if(std::find(
+                alumnos.begin(),
+                alumnos.end(),
+                idAlumno
+            ) != alumnos.end())
+            {
+                return false;
+            }
+
+            //==========================================
+            // Agregar alumno
+            //==========================================
+
+            alumnos.push_back(idAlumno);
 
             return guardar(
                 inscripciones,
@@ -204,99 +254,238 @@ bool Inscripciones::desinscribirAlumno(
         }
     }
 
-    // La inscripción no existe
-    return false;
-}
+    //==================================================
+    // La materia todavía no tiene registros
+    //==================================================
 
-
-//==================================================
-// Obtener alumnos de una materia
-//==================================================
-
-std::vector<int>
-Inscripciones::obtenerAlumnosMateria(
-    int idMateria,
-    const std::string& archivo)
-{
-    std::vector<Inscripcion> inscripciones;
-
-    std::vector<int> alumnos;
-
-    if(!cargar(inscripciones, archivo))
-    {
-        return alumnos;
-    }
-
-    for(const auto& inscripcion : inscripciones)
-    {
-        if(inscripcion.idMateria == idMateria)
+    inscripciones.push_back(
         {
-            alumnos.push_back(
-                inscripcion.idAlumno
-            );
+            idMateria,
+            { idAlumno }
         }
-    }
+    );
 
-    return alumnos;
+    return guardar(
+        inscripciones,
+        archivo
+    );
 }
 
 
-//==================================================
-// Obtener materias de un alumno
-//==================================================
+//======================================================
+// DESINSCRIBIR ALUMNO
+//======================================================
 
-std::vector<int>
-Inscripciones::obtenerMateriasAlumno(
-    int idAlumno,
-    const std::string& archivo)
-{
-    std::vector<Inscripcion> inscripciones;
-
-    std::vector<int> materias;
-
-    if(!cargar(inscripciones, archivo))
-    {
-        return materias;
-    }
-
-    for(const auto& inscripcion : inscripciones)
-    {
-        if(inscripcion.idAlumno == idAlumno)
-        {
-            materias.push_back(
-                inscripcion.idMateria
-            );
-        }
-    }
-
-    return materias;
-}
-
-
-//==================================================
-// Verificar inscripción
-//==================================================
-
-bool Inscripciones::estaInscrito(
+bool Inscripciones::desinscribirAlumno(
     int idMateria,
     int idAlumno,
-    const std::string& archivo)
+    const std::string& archivo
+)
 {
-    std::vector<Inscripcion> inscripciones;
-
-    if(!cargar(inscripciones, archivo))
+    if(idMateria <= 0 || idAlumno <= 0)
     {
         return false;
     }
 
-    for(const auto& inscripcion : inscripciones)
+    //==================================================
+    // Cargar datos
+    //==================================================
+
+    std::vector<
+        std::pair<int, std::vector<int>>
+    > inscripciones;
+
+    if(!cargar(
+        inscripciones,
+        archivo
+    ))
     {
-        if(inscripcion.idMateria == idMateria &&
-           inscripcion.idAlumno == idAlumno)
+        return false;
+    }
+
+    //==================================================
+    // Buscar materia
+    //==================================================
+
+    for(auto it = inscripciones.begin();
+        it != inscripciones.end();
+        ++it)
+    {
+        if(it->first == idMateria)
         {
-            return true;
+            std::vector<int>& alumnos =
+                it->second;
+
+            //==========================================
+            // Buscar alumno
+            //==========================================
+
+            auto alumnoIt = std::find(
+                alumnos.begin(),
+                alumnos.end(),
+                idAlumno
+            );
+
+            if(alumnoIt == alumnos.end())
+            {
+                return false;
+            }
+
+            //==========================================
+            // Eliminar alumno
+            //==========================================
+
+            alumnos.erase(alumnoIt);
+
+            //==========================================
+            // Si ya no hay alumnos,
+            // eliminar registro de materia
+            //==========================================
+
+            if(alumnos.empty())
+            {
+                inscripciones.erase(it);
+            }
+
+            return guardar(
+                inscripciones,
+                archivo
+            );
         }
     }
 
     return false;
+}
+
+
+//======================================================
+// VERIFICAR INSCRIPCIÓN
+//======================================================
+
+bool Inscripciones::estaInscrito(
+    int idMateria,
+    int idAlumno,
+    const std::string& archivo
+)
+{
+    std::vector<
+        std::pair<int, std::vector<int>>
+    > inscripciones;
+
+    if(!cargar(
+        inscripciones,
+        archivo
+    ))
+    {
+        return false;
+    }
+
+    for(const auto& registro : inscripciones)
+    {
+        if(registro.first == idMateria)
+        {
+            const std::vector<int>& alumnos =
+                registro.second;
+
+            return std::find(
+                alumnos.begin(),
+                alumnos.end(),
+                idAlumno
+            ) != alumnos.end();
+        }
+    }
+
+    return false;
+}
+
+
+//======================================================
+// OBTENER ALUMNOS DE UNA MATERIA
+//======================================================
+
+std::vector<int>
+Inscripciones::obtenerAlumnosMateria(
+    int idMateria,
+    const std::string& archivo
+)
+{
+    std::vector<int> resultado;
+
+    std::vector<
+        std::pair<int, std::vector<int>>
+    > inscripciones;
+
+    if(!cargar(
+        inscripciones,
+        archivo
+    ))
+    {
+        return resultado;
+    }
+
+    for(const auto& registro : inscripciones)
+    {
+        if(registro.first == idMateria)
+        {
+            resultado = registro.second;
+            break;
+        }
+    }
+
+    return resultado;
+}
+
+
+//======================================================
+// OBTENER MATERIAS DE UN ALUMNO
+//======================================================
+
+std::vector<int>
+Inscripciones::obtenerMateriasAlumno(
+    int idAlumno,
+    const std::string& archivo
+)
+{
+    std::vector<int> resultado;
+
+    std::vector<
+        std::pair<int, std::vector<int>>
+    > inscripciones;
+
+    if(!cargar(
+        inscripciones,
+        archivo
+    ))
+    {
+        return resultado;
+    }
+
+    //==================================================
+    // Recorrer materias
+    //==================================================
+
+    for(const auto& registro : inscripciones)
+    {
+        int idMateria = registro.first;
+
+        const std::vector<int>& alumnos =
+            registro.second;
+
+        //================================================
+        // Buscar alumno
+        //================================================
+
+        if(std::find(
+            alumnos.begin(),
+            alumnos.end(),
+            idAlumno
+        ) != alumnos.end())
+        {
+            resultado.push_back(
+                idMateria
+            );
+        }
+    }
+
+    return resultado;
 }

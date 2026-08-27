@@ -46,12 +46,14 @@ add_executable(
     src/profesor.cpp
     src/administrador.cpp
 
+    src/inscripciones.cpp
     src/subtarea.cpp
     src/tarea.cpp
     src/materia.cpp
 
     src/plannerDia.cpp
     src/plannerSemana.cpp
+    src/estadoTareaAlumno.cpp
 
     # Red
     src/cliente.cpp
@@ -111,12 +113,15 @@ add_executable(
     src/profesor.cpp
     src/administrador.cpp
 
+    src/inscripciones.cpp
     src/subtarea.cpp
     src/tarea.cpp
     src/materia.cpp
 
     src/plannerDia.cpp
     src/plannerSemana.cpp
+    src/estadoTareaAlumno.cpp
+    src/notificaciones.cpp
 )
 
 target_link_libraries(
@@ -168,12 +173,15 @@ add_executable(
     src/profesor.cpp
     src/administrador.cpp
 
+    src/inscripciones.cpp
     src/subtarea.cpp
     src/tarea.cpp
     src/materia.cpp
 
     src/plannerDia.cpp
     src/plannerSemana.cpp
+    src/estadoTareaAlumno.cpp
+    src/notificaciones.cpp
 )
 
 target_link_libraries(
