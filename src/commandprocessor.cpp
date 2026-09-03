@@ -138,7 +138,6 @@ std::string CommandProcessor::procesar(
     // UPDATE_USUARIO
     ///////////////////////////////////////////////////////////
 
-
     if(comando == "UPDATE_USUARIO")
     {
         if(!session.estaAutenticado())
@@ -250,7 +249,7 @@ std::string CommandProcessor::procesar(
     }
 
     ///////////////////////////////////////////////////////////
-    // OBTENER MATERIAS
+    // GET_MATERIAS
     ///////////////////////////////////////////////////////////
 
     if(comando == "GET_MATERIAS")
@@ -359,8 +358,365 @@ std::string CommandProcessor::procesar(
         return "ERROR|No se pudo eliminar la materia";
     }
 
+    ///////////////////////////////////////////////////////////
+    // AGREGAR CALIFICACION
+    ///////////////////////////////////////////////////////////
+
+    if(comando == "ADD_CALIFICACION")
+    {
+        
+        // AUTENTICACIÓN
+        if(!session.estaAutenticado())
+        {
+            return "NO_LOGIN";
+        }
+
+   
+        // VALIDAR PARÁMETROS
+        if(datos.size() < 4)
+        {
+            return "ERROR|Datos insuficientes";
+        }
+
+   
+        // CONVERTIR ID ALUMNO
+        int idAlumno;
+
+        try
+        {
+            idAlumno = std::stoi(datos[1]);
+        }
+        catch(...)
+        {
+            return "ERROR|ID de alumno invalido";
+        }
 
     
+        // CONVERTIR ID TAREA
+        int idTarea;
+
+        try
+        {
+            idTarea = std::stoi(datos[2]);
+        }
+        catch(...)
+        {
+            return "ERROR|ID de tarea invalido";
+        }
+
+    
+        // CONVERTIR CALIFICACIÓN
+        double calificacion;
+
+        try
+        {
+            calificacion = std::stod(datos[3]);
+        }
+        catch(...)
+        {
+            return "ERROR|Calificacion invalida";
+        }   
+
+
+        // AGREGAR CALIFICACIÓN
+        if(session.registrarCalificacion(idAlumno,idTarea,calificacion))
+        {
+            return "CALIFICACION_AGREGADA";
+        }
+
+        return "ERROR|No se pudo agregar la calificacion";
+    }
+
+
+    ///////////////////////////////////////////////////////////
+    // GET_CALIFICACIONES
+    ///////////////////////////////////////////////////////////
+
+    if(comando == "GET_CALIFICACIONES")
+    {
+        //==================================================
+        // AUTENTICACIÓN
+        //==================================================
+
+        if(!session.estaAutenticado())
+        {
+            return "NO_LOGIN";
+        }
+
+        //==================================================
+        // VALIDAR PARÁMETROS
+        //==================================================
+
+        if(datos.size() < 2)
+        {
+            return "ERROR|ID de alumno requerido";
+        }
+
+        //==================================================
+        // CONVERTIR ID
+        //==================================================
+
+        int idAlumno;
+
+        try
+        {
+            idAlumno = std::stoi(datos[1]);
+        }
+        catch(...)
+        {
+            return "ERROR|ID de alumno invalido";
+        }
+
+        //==================================================
+        // OBTENER CALIFICACIONES
+        //==================================================
+
+        std::vector<Calificacion> calificaciones;
+
+        if(!session.obtenerCalificacionesAlumno(idAlumno,calificaciones))
+        {
+            return "ERROR|No se pudieron obtener las calificaciones";
+        }
+
+        //==================================================
+        // VERIFICAR SI HAY CALIFICACIONES
+        //==================================================
+
+        if(calificaciones.empty())
+        {
+            return "SIN_CALIFICACIONES";
+        }
+
+        //==================================================
+        // CONSTRUIR RESPUESTA
+        //==================================================
+
+        std::stringstream respuesta;
+
+        respuesta << "CALIFICACIONES";
+
+        for(const auto& calificacion : calificaciones)
+        {
+            respuesta
+                << "|"
+                << calificacion.getIdAlumno()
+                << ";"
+                << calificacion.getIdTarea()
+                << ";"
+                << calificacion.getCalificacion();
+        }
+
+        return respuesta.str();
+    }
+
+    ///////////////////////////////////////////////////////////
+    // ACTUALIZAR CALIFICACION
+    ///////////////////////////////////////////////////////////
+
+    if(comando == "UPDATE_CALIFICACION")
+    {
+        //==================================================
+        // AUTENTICACIÓN
+        //==================================================
+
+        if(!session.estaAutenticado())
+        {
+            return "NO_LOGIN";
+        }
+
+        //==================================================
+        // VALIDAR PARÁMETROS
+        //==================================================
+
+        if(datos.size() < 4)
+        {
+            return "ERROR|Datos insuficientes";
+        }
+
+        //==================================================
+        // CONVERTIR ID ALUMNO
+        //==================================================
+
+        int idAlumno;
+
+        try
+        {
+            idAlumno = std::stoi(datos[1]);
+        }
+        catch(...)
+        {
+            return "ERROR|ID de alumno invalido";
+        }
+
+        //==================================================
+        // CONVERTIR ID TAREA
+        //==================================================
+
+        int idTarea;
+
+        try
+        {
+            idTarea = std::stoi(datos[2]);
+        }
+        catch(...)
+        {
+            return "ERROR|ID de tarea invalido";
+        }
+
+        //==================================================
+        // CONVERTIR CALIFICACIÓN
+        //==================================================
+
+        double calificacion;
+
+        try
+        {
+            calificacion = std::stod(datos[3]);
+        }
+        catch(...)
+        {
+            return "ERROR|Calificacion invalida";
+        }
+
+        //==================================================
+        // ACTUALIZAR CALIFICACIÓN
+        //==================================================
+
+        if(session.editarCalificacion(idAlumno,idTarea,calificacion))
+        {
+            return "CALIFICACION_ACTUALIZADA";
+        }
+
+        return "ERROR|No se pudo actualizar la calificacion";
+    }
+
+
+    ////////////////////////////////////////////////////////
+    // ELIMINAR CALIFICACION
+    ////////////////////////////////////////////////////////
+
+    if(comando == "DELETE_CALIFICACION")
+    {
+        //==================================================
+        // AUTENTICACIÓN
+        //==================================================
+
+        if(!session.estaAutenticado())
+        {
+            return "NO_LOGIN";
+        }
+
+        //==================================================
+        // VALIDAR PARÁMETROS
+        //==================================================
+
+        if(datos.size() < 3)
+        {
+            return "ERROR|Datos insuficientes";
+        }
+
+        //==================================================
+        // CONVERTIR ID ALUMNO
+        //==================================================
+
+        int idAlumno;
+
+        try
+        {
+            idAlumno = std::stoi(datos[1]);
+        }
+        catch(...)
+        {
+            return "ERROR|ID de alumno invalido";
+        }
+
+        //==================================================
+        // CONVERTIR ID TAREA
+        //==================================================
+
+        int idTarea;
+
+        try
+        {
+            idTarea = std::stoi(datos[2]);
+        }
+        catch(...)
+        {
+            return "ERROR|ID de tarea invalido";
+        }
+
+        //==================================================
+        // ELIMINAR CALIFICACIÓN
+        //==================================================
+
+        if(session.eliminarCalificacion(idAlumno,idTarea))
+        {
+            return "CALIFICACION_ELIMINADA";
+        }
+
+        return "ERROR|No se pudo eliminar la calificacion";
+    }
+
+
+    ///////////////////////////////////////////////////////////
+    // GET_CALIFICACION_FINAL
+    ///////////////////////////////////////////////////////////
+
+    if(comando == "GET_CALIFICACION_FINAL")
+    {
+        if(!session.estaAutenticado())
+        {
+            return "NO_LOGIN";
+        }
+
+        if(datos.size() < 3)
+        {
+            return "ERROR|Datos insuficientes";
+        }
+
+        int idAlumno;
+
+        try
+        {
+            idAlumno = std::stoi(datos[1]);
+        }
+        catch(...)
+        {
+            return "ERROR|ID de alumno invalido";
+        }
+
+        int idMateria;
+
+        try
+        {   
+            idMateria = std::stoi(datos[2]);
+        }
+        catch(...)
+        {
+            return "ERROR|ID de materia invalido";
+        }
+
+        double calificacionFinal;
+
+        if(session.obtenerCalificacionFinal(idAlumno,idMateria,calificacionFinal))
+        {
+            std::stringstream respuesta;
+
+            respuesta
+                << "CALIFICACION_FINAL|"
+                << idAlumno
+                << "|"
+                << idMateria
+                << "|"
+                << calificacionFinal;
+
+            return respuesta.str();
+        }
+
+        return "ERROR|No se pudo obtener la calificacion final";
+    }
+
+
     ////////////////////////////////////////////////////////
     // INSCRIBIR_ALUMNO
     ////////////////////////////////////////////////////////
@@ -483,9 +839,8 @@ std::string CommandProcessor::procesar(
     }
 
 
-
-    ///////////////////////////////////////////////////////
-    // AGREGAR_TAREA
+    /////////////////////////////////////////////////////////
+    // ADD_TAREA
     ///////////////////////////////////////////////////////
 
     if(comando == "ADD_TAREA")
@@ -495,11 +850,13 @@ std::string CommandProcessor::procesar(
             return "NO_LOGIN";
         }
 
-        if(datos.size() < 6)
+        if(datos.size() < 7)
         {
             return "ERROR|Faltan parametros";
         }
 
+    
+        // ID DE MATERIA
         int idMateria;
 
         try
@@ -511,11 +868,17 @@ std::string CommandProcessor::procesar(
             return "ERROR|El ID de materia debe ser un numero";
         }
 
+        // DATOS DE LA TAREA
         std::string titulo = datos[2];
         std::string fechaEntrega = datos[3];
         std::string descripcion = datos[4];
         std::string tipoTexto = datos[5];
+        std::string parcialTexto = datos[6];
 
+
+    
+        // VALIDAR DATOS
+   
 
         if(titulo.empty())
         {
@@ -537,11 +900,32 @@ std::string CommandProcessor::procesar(
             return "ERROR|Falta tipo de tarea";
         }
 
+        if(parcialTexto.empty())
+        {
+            return "ERROR|Falta parcial";
+        }
 
-        // =========================================
-        // Convertir tipo
-        // =========================================
+        // CONVERTIR PARCIAL
+        int parcial;
 
+        try
+        {
+            parcial = std::stoi(parcialTexto);
+        }
+        catch(...)
+        {
+            return "ERROR|El parcial debe ser un numero";
+        }
+
+
+    
+        // VALIDAR PARCIAL
+        if(parcial < 0)
+        {
+            return "ERROR|El parcial no puede ser negativo";
+        }
+
+        // CONVERTIR TIPO DE TAREA
         TipoTarea tipo;
 
         if(tipoTexto == "TAREA")
@@ -574,11 +958,17 @@ std::string CommandProcessor::procesar(
         }
 
 
-        // =========================================
-        // Crear tarea
-        // =========================================
+        // CREAR TAREA
+   
 
-        if(session.agregarTarea(idMateria,titulo,fechaEntrega,descripcion,tipo))
+        if(session.agregarTarea(
+            idMateria,
+            titulo,
+            fechaEntrega,
+            descripcion,
+            tipo,
+            parcial
+        ))
         {
             return "TAREA_CREADA";
         }
@@ -616,6 +1006,8 @@ std::string CommandProcessor::procesar(
             respuesta += ",";
             respuesta += tarea.getDescripcion();
             respuesta += ",";
+            respuesta += std::to_string(tarea.getParcial());
+            respuesta += ",";
             respuesta += Persistencia::tipoTareaAString(tarea.getTipo());
         }
 
@@ -623,10 +1015,9 @@ std::string CommandProcessor::procesar(
     }
 
 
-    ////////////////////////////////////////////////////
-    //EDITAR TAREAS
-    ////////////////////////////////////////////////////
-    
+    ///////////////////////////////////////////////////////
+    // UPDATE_TAREA
+    ///////////////////////////////////////////////////////
 
     if(comando == "UPDATE_TAREA")
     {
@@ -635,15 +1026,14 @@ std::string CommandProcessor::procesar(
             return "NO_LOGIN";
         }
 
-        if(datos.size() < 6)
+        if(datos.size() < 7)
         {
             return "ERROR|Faltan parametros";
         }
 
-        // ================================================
-        // ID DE TAREA
-        // ================================================
 
+
+        // ID DE TAREA
         int idTarea;
 
         try
@@ -656,19 +1046,16 @@ std::string CommandProcessor::procesar(
         }
 
 
-        // ================================================
         // DATOS DE LA TAREA
-        // ================================================
-
         std::string titulo = datos[2];
         std::string fechaEntrega = datos[3];
         std::string descripcion = datos[4];
         std::string tipoTexto = datos[5];
+        std::string parcialTexto = datos[6];
 
 
-        // ================================================
-        // VALIDAR DATOS
-        // ================================================
+    
+    // VALIDAR DATOS
 
         if(titulo.empty())
         {
@@ -690,11 +1077,35 @@ std::string CommandProcessor::procesar(
             return "ERROR|Falta tipo de tarea";
         }
 
+        if(parcialTexto.empty())
+        {
+            return "ERROR|Falta parcial";
+        }
 
-        // ================================================
+
+    
+        // CONVERTIR PARCIAL
+        int parcial;
+
+        try
+        {
+            parcial = std::stoi(parcialTexto);
+        }
+        catch(...)
+        {
+            return "ERROR|El parcial debe ser un numero";
+        }
+
+
+    
+        // VALIDAR PARCIAL
+        if(parcial < 0)
+        {
+            return "ERROR|El parcial no puede ser negativo";
+        }
+
+
         // CONVERTIR TIPO DE TAREA
-        // ================================================
-
         TipoTarea tipo;
 
         if(tipoTexto == "TAREA")
@@ -727,11 +1138,16 @@ std::string CommandProcessor::procesar(
         }
 
 
-        // ================================================
+    
         // ACTUALIZAR TAREA
-        // ================================================
-
-        if(session.editarTarea(idTarea,titulo,fechaEntrega,descripcion,tipo))
+        if(session.editarTarea(
+            idTarea,
+            titulo,
+            fechaEntrega,
+            descripcion,
+            tipo,
+            parcial
+        ))
         {
             return "TAREA_ACTUALIZADA";
         }
@@ -782,6 +1198,283 @@ std::string CommandProcessor::procesar(
         return "ERROR|No se pudo eliminar la tarea";
     }
 
+    ///////////////////////////////////////////////////////
+    // CONFIGURAR PONDERACION
+    ///////////////////////////////////////////////////////
+
+    if(comando == "SET_PONDERACION")
+    {
+    
+        // AUTENTICACION
+         if(!session.estaAutenticado())
+        {
+            return "NO_LOGIN";
+        }
+
+        //==================================================
+        // VALIDAR CANTIDAD DE PARAMETROS
+        //
+        // comando
+        // idMateria
+        // parcial
+        // tarea
+        // examen
+        // practica
+        // proyecto
+        // trabajo
+        // otro
+        //==================================================
+
+        if(datos.size() < 9)
+        {
+            return "ERROR|Faltan parametros";
+        }
+
+        
+        // CONVERTIR ID DE MATERIA
+        int idMateria;
+
+        try
+        {
+            idMateria = std::stoi(
+                datos[1]
+            );
+        }
+        catch(...)
+        {
+            return "ERROR|El ID de materia debe ser un numero";
+        }
+
+
+        // CONVERTIR PARCIAL
+        int parcial;
+
+        try
+        {
+            parcial = std::stoi(
+                datos[2]
+            );
+        }
+        catch(...)
+        {
+            return "ERROR|El parcial debe ser un numero";
+        }
+
+        
+        // CONVERTIR PONDERACIONES
+        double tarea;
+        double examen;
+        double practica;
+        double proyecto;
+        double trabajo;
+        double otro;
+
+        try
+        {
+            tarea = std::stod(datos[3]);
+            examen = std::stod(datos[4]);
+            practica = std::stod(datos[5]);
+            proyecto = std::stod(datos[6]);
+            trabajo = std::stod(datos[7]);
+            otro = std::stod(datos[8]);
+        }
+        catch(...)
+        {
+            return "ERROR|Las ponderaciones deben ser numeros";
+        }
+
+        
+        // CONFIGURAR PONDERACION
+        if(session.configurarPonderacion(
+            idMateria,
+            parcial,
+            tarea,
+            examen,
+            practica,
+            proyecto,
+            trabajo,
+            otro
+        ))
+        {
+            return "PONDERACION_GUARDADA";
+        }
+
+        return "ERROR|No se pudo guardar la ponderacion";
+    }
+
+
+    ///////////////////////////////////////////////////////
+    // OBTENER PONDERACIONES
+    ///////////////////////////////////////////////////////
+
+    if(comando == "GET_PONDERACIONES")
+    {
+        //==================================================
+        // AUTENTICACION
+        //==================================================
+
+        if(!session.estaAutenticado())
+        {
+            return "NO_LOGIN";
+        }
+
+        //==================================================
+        // VALIDAR PARAMETROS
+        //==================================================
+
+        if(datos.size() < 2)
+        {
+            return "ERROR|Falta ID de materia";
+        }
+
+        //==================================================
+        // CONVERTIR ID
+        //==================================================
+
+        int idMateria;
+
+        try
+        {
+            idMateria = std::stoi(
+                datos[1]
+            );
+        }
+        catch(...)
+        {
+            return "ERROR|El ID de materia debe ser un numero";
+        }
+
+        //==================================================
+        // OBTENER PONDERACIONES
+        //==================================================
+
+        std::vector<Ponderacion> ponderaciones;
+
+        if(!session.obtenerPonderacionesMateria(
+            idMateria,
+            ponderaciones
+        ))
+        {
+            return "ERROR|No se pudieron obtener las ponderaciones";
+        }
+
+        //==================================================
+        // SI NO HAY PONDERACIONES
+        //==================================================
+
+        if(ponderaciones.empty())
+        {
+            return "SIN_PONDERACIONES";
+        }
+
+        //==================================================
+        // CONSTRUIR RESPUESTA
+        //
+        // Formato:
+        //
+        // PONDERACIONES|
+        // parcial|tarea|examen|practica|
+        // proyecto|trabajo|otro
+        //==================================================
+
+        std::string respuesta =
+            "PONDERACIONES";
+
+        for(const auto& ponderacion :
+            ponderaciones)
+        {
+            respuesta +=
+                "|" +
+                std::to_string(
+                    ponderacion.getParcial()
+                );
+
+            respuesta +=
+                "|" +
+                std::to_string(
+                    ponderacion.getTarea()
+                );
+
+            respuesta +=
+                "|" +
+                std::to_string(
+                    ponderacion.getExamen()
+                );
+
+            respuesta +=
+                "|" +
+                std::to_string(
+                    ponderacion.getPractica()
+                );
+
+            respuesta +=
+                "|" +
+                std::to_string(
+                    ponderacion.getProyecto()
+                );
+
+            respuesta +=
+                "|" +
+                std::to_string(
+                    ponderacion.getTrabajo()
+                );
+
+            respuesta +=
+                "|" +
+                std::to_string(
+                    ponderacion.getOtro()
+                );
+        }
+
+        return respuesta;
+    }
+
+    ///////////////////////////////////////////////////////////
+    // DELETE_PONDERACION
+    ///////////////////////////////////////////////////////////
+
+    if(comando == "DELETE_PONDERACION")
+    {
+        if(!session.estaAutenticado())
+        {
+            return "NO_LOGIN";
+        }
+
+        if(datos.size() < 3)
+        {
+            return "ERROR|Faltan parametros";
+        }
+
+        int idMateria;
+        int parcial;
+
+        try
+        {
+            idMateria = std::stoi(datos[1]);
+            parcial = std::stoi(datos[2]);
+        }   
+        catch(...)
+        {
+            return "ERROR|Parametros invalidos";
+        }
+
+        if(idMateria <= 0)
+        {
+            return "ERROR|ID de materia invalido";
+        }
+
+        if(parcial < 0)
+        {
+            return "ERROR|Parcial invalido";
+        }
+
+        if(session.eliminarPonderacion(idMateria,parcial))
+        {
+            return "PONDERACION_ELIMINADA";
+        }
+
+        return "ERROR|No se pudo eliminar la ponderacion";
+    }
 
     ////////////////////////////////////////////////////////
     // ADD_SUBTAREA
@@ -1345,7 +2038,7 @@ std::string CommandProcessor::procesar(
 
     ////////////////////////////////////////////////////////
     // GET_ESTADOS_TAREA
-    ////////////////////////////////////////////////////////
+    ////////////////////////////////////////P////////////////
 
 
     if(comando == "GET_ESTADOS_TAREA")
@@ -1491,119 +2184,109 @@ std::string CommandProcessor::procesar(
     }
 
     ////////////////////////////////////////////////////////////
-// GET_NOTIFICACIONES
-////////////////////////////////////////////////////////////
+    // GET_NOTIFICACIONES
+    ////////////////////////////////////////////////////////////
 
-if(comando == "GET_NOTIFICACIONES")
-{
-    std::vector<Notificacion> notificaciones =
-        session.obtenerNotificaciones();
-
-    std::ostringstream respuesta;
-
-    respuesta << "OK";
-
-    for(const auto& notificacion : notificaciones)
+    if(comando == "GET_NOTIFICACIONES")
     {
-        respuesta << "|"
-                  << notificacion.getId()
-                  << ";"
-                  << static_cast<int>(
-                         notificacion.getTipo()
-                     )
-                  << ";"
-                  << notificacion.getIdReferencia()
-                  << ";"
-                  << static_cast<int>(
-                         notificacion.getTipoReferencia()
-                     )
-                  << ";"
-                  << notificacion.getTitulo()
-                  << ";"
-                  << notificacion.getMensaje()
-                  << ";"
-                  << notificacion.getFecha()
-                  << ";"
-                  << (
-                        notificacion.estaLeida()
-                        ? "1"
-                        : "0"
-                     );
+        std::vector<Notificacion> notificaciones = session.obtenerNotificaciones();
+        std::ostringstream respuesta;
+
+        respuesta << "OK";
+
+        for(const auto& notificacion : notificaciones)
+        {
+            respuesta << "|"
+                      << notificacion.getId()
+                      << ";"
+                      << static_cast<int>(notificacion.getTipo())
+                      << ";"
+                      << notificacion.getIdReferencia()
+                      << ";"
+                      << static_cast<int>(notificacion.getTipoReferencia())
+                      << ";"
+                      << notificacion.getTitulo()
+                      << ";"
+                      << notificacion.getMensaje()
+                      << ";"
+                      << notificacion.getFecha()
+                      << ";"
+                      << (notificacion.estaLeida() ? "1" : "0");
+        }
+
+        return respuesta.str();
     }
 
-    return respuesta.str();
-}
 
+    ////////////////////////////////////////////////////////////
+    // MARCAR_NOTIFICACION_LEIDA
+    ////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////
-// MARCAR_NOTIFICACION_LEIDA
-////////////////////////////////////////////////////////////
-
-if(comando == "MARCAR_NOTIFICACION_LEIDA")
-{
-    if(!session.estaAutenticado())
+    if(comando == "MARCAR_NOTIFICACION_LEIDA")
     {
-        return "NO_LOGIN";
+        if(!session.estaAutenticado())
+        {   
+            return "NO_LOGIN";
+        }
+
+        if(datos.size() < 2)
+        {
+            return "ERROR|Falta ID de notificacion";
+        }
+
+        int idNotificacion;
+
+        try
+        {
+            idNotificacion = std::stoi(datos[1]);
+        }
+        catch(...)
+        {
+            return "ERROR|El ID de notificacion debe ser un numero";
+        }
+
+        if(session.marcarNotificacionLeida(idNotificacion))
+        {
+            return "NOTIFICACION_MARCADA";
+        }
+
+        return "ERROR|No se pudo marcar la notificacion";
     }
 
-    if(datos.size() < 2)
+    ////////////////////////////////////////////////////////////
+    // DELETE_NOTIFICACION
+    ////////////////////////////////////////////////////////////
+
+    if(comando == "DELETE_NOTIFICACION")
     {
-        return "ERROR|Falta ID de notificacion";
+        if(!session.estaAutenticado())
+        {
+            return "NO_LOGIN";
+        }
+
+        if(datos.size() < 2)
+        {
+            return "ERROR|Falta ID de notificacion";
+        }
+
+        int idNotificacion;
+
+        try
+        {
+            idNotificacion = std::stoi(datos[1]);
+        }
+        catch(...)
+        {
+            return "ERROR|El ID de notificacion debe ser un numero";
+        }
+
+        if(session.eliminarNotificacion(idNotificacion))
+        {
+            return "NOTIFICACION_ELIMINADA";
+        }
+
+        return "ERROR|No se pudo eliminar la notificacion";
     }
-
-    int idNotificacion;
-
-    try
-    {
-        idNotificacion = std::stoi(datos[1]);
-    }
-    catch(...)
-    {
-        return "ERROR|El ID de notificacion debe ser un numero";
-    }
-
-    if(session.marcarNotificacionLeida(idNotificacion))
-    {
-        return "NOTIFICACION_MARCADA";
-    }
-
-    return "ERROR|No se pudo marcar la notificacion";
-}
-
-////////////////////////////////////////////////////////////
-// DELETE_NOTIFICACION
-////////////////////////////////////////////////////////////
-
-if(comando == "DELETE_NOTIFICACION")
-{
-    if(!session.estaAutenticado())
-    {
-        return "NO_LOGIN";
-    }
-
-    if(datos.size() < 2)
-    {
-        return "ERROR|Falta ID de notificacion";
-    }
-
-    int idNotificacion;
-
-    try
-    {
-        idNotificacion = std::stoi(datos[1]);
-    }
-    catch(...)
-    {
-        return "ERROR|El ID de notificacion debe ser un numero";
-    }
-
-    if(session.eliminarNotificacion(idNotificacion))
-    {
-        return "NOTIFICACION_ELIMINADA";
-    }
-
-    return "ERROR|No se pudo eliminar la notificacion";
-}
 
     
     

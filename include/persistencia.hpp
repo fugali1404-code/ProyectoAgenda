@@ -14,6 +14,8 @@
 #include "plannerDia.hpp"
 #include "estadoTareaAlumno.hpp"
 #include "notificaciones.hpp"
+#include "ponderacion.hpp"
+#include "calificaciones.hpp"
 
 class Persistencia
 {
@@ -41,6 +43,22 @@ public:
         TipoTarea tipo      
     );
 
+
+    ///////////////////////////////////////////////////////////
+    // PONDERACIONES
+    ///////////////////////////////////////////////////////////
+
+    static bool guardarPonderaciones(
+        const std::vector<Ponderacion>& ponderaciones,
+        const std::string& archivo
+    );
+
+    static bool cargarPonderaciones(
+        std::vector<Ponderacion>& ponderaciones,
+        const std::string& archivo
+    );
+
+
     ///////////////////////////////////////////////////////////
     // MATERIAS
     ///////////////////////////////////////////////////////////
@@ -58,6 +76,20 @@ public:
 
     static int generarIdMateria(
         const std::string& archivo
+    );
+
+    ///////////////////////////////////////////////////////////
+    // CALIFICACIONES
+    ///////////////////////////////////////////////////////////
+
+    static bool guardarCalificaciones(
+        const std::vector<Calificacion>& calificaciones,
+        const std::string& archivo = "calificaciones.txt"
+    );
+
+    static bool cargarCalificaciones(
+        std::vector<Calificacion>& calificaciones,
+        const std::string& archivo = "calificaciones.txt"
     );
 
     ///////////////////////////////////////////////////////////

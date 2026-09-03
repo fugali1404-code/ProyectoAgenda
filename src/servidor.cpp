@@ -14,37 +14,63 @@
 Servidor::Servidor()
 {
     serverSocket = -1;
+    activo = false;
 
 #ifdef _WIN32
+
     WSADATA wsaData;
 
-    int resultado = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    int resultado = WSAStartup(
+        MAKEWORD(2, 2),
+        &wsaData
+    );
 
     if (resultado != 0)
     {
-        std::cerr << "Error en WSAStartup: " << resultado << std::endl;
+        std::cerr
+            << "Error en WSAStartup: "
+            << resultado
+            << std::endl;
     }
+
 #endif
 }
 
+
 bool Servidor::iniciar(int puerto)
 {
-    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    serverSocket = socket(
+        AF_INET,
+        SOCK_STREAM,
+        0
+    );
 
 #ifdef _WIN32
+
     if (serverSocket == INVALID_SOCKET)
+
 #else
+
     if (serverSocket < 0)
+
 #endif
     {
-        std::cerr << "Error al crear el socket." << std::endl;
+        std::cerr
+            << "Error al crear el socket."
+            << std::endl;
+
         return false;
     }
 
+
     sockaddr_in direccion{};
+
     direccion.sin_family = AF_INET;
+
     direccion.sin_addr.s_addr = INADDR_ANY;
+
     direccion.sin_port = htons(puerto);
+
 
     int opcion = 1;
 
@@ -56,36 +82,61 @@ bool Servidor::iniciar(int puerto)
         sizeof(opcion)
     );
 
+
     if (bind(
             serverSocket,
             reinterpret_cast<sockaddr*>(&direccion),
             sizeof(direccion)
         ) < 0)
     {
-        std::cerr << "Error en bind()." << std::endl;
+        std::cerr
+            << "Error en bind()."
+            << std::endl;
+
         cerrar();
+
         return false;
     }
 
+
     if (listen(serverSocket, 5) < 0)
     {
-        std::cerr << "Error en listen()." << std::endl;
+        std::cerr
+            << "Error en listen()."
+            << std::endl;
+
         cerrar();
+
         return false;
     }
+
+
+    activo = true;
 
     return true;
 }
 
+
 int Servidor::aceptarCliente()
 {
+    if (!activo)
+    {
+        return -1;
+    }
+
+
     sockaddr_in cliente{};
 
 #ifdef _WIN32
+
     int tamCliente = sizeof(cliente);
+
 #else
+
     socklen_t tamCliente = sizeof(cliente);
+
 #endif
+
 
     int socketCliente = accept(
         serverSocket,
@@ -93,18 +144,39 @@ int Servidor::aceptarCliente()
         &tamCliente
     );
 
+
 #ifdef _WIN32
+
     if (socketCliente == INVALID_SOCKET)
+
 #else
+
     if (socketCliente < 0)
+
 #endif
     {
-        std::cerr << "Error al aceptar cliente." << std::endl;
+        /*
+         * Si el servidor fue detenido,
+         * este error es esperado porque
+         * el socket de escucha fue cerrado.
+         */
+
+        if (!activo)
+        {
+            return -1;
+        }
+
+        std::cerr
+            << "Error al aceptar cliente."
+            << std::endl;
+
         return -1;
     }
 
+
     return socketCliente;
 }
+
 
 bool Servidor::recibirMensaje(
     int clienteSocket,
@@ -113,6 +185,7 @@ bool Servidor::recibirMensaje(
 {
     char buffer[1024];
 
+
     int bytesRecibidos = recv(
         clienteSocket,
         buffer,
@@ -120,41 +193,21 @@ bool Servidor::recibirMensaje(
         0
     );
 
+
     if (bytesRecibidos <= 0)
     {
         return false;
     }
 
+
     buffer[bytesRecibidos] = '\0';
 
     mensaje = buffer;
 
+
     return true;
 }
 
-void Servidor::cerrar()
-{
-#ifdef _WIN32
-
-    if (serverSocket != INVALID_SOCKET &&
-        serverSocket != -1)
-    {
-        closesocket(serverSocket);
-        serverSocket = -1;
-    }
-
-    WSACleanup();
-
-#else
-
-    if (serverSocket >= 0)
-    {
-        close(serverSocket);
-        serverSocket = -1;
-    }
-
-#endif
-}
 
 bool Servidor::enviarMensaje(
     int clienteSocket,
@@ -168,5 +221,76 @@ bool Servidor::enviarMensaje(
         0
     );
 
+
     return enviados > 0;
+}
+
+
+bool Servidor::estaActivo() const
+{
+    return activo;
+}
+
+
+void Servidor::detener()
+{
+    if (!activo)
+    {
+        return;
+    }
+
+
+    activo = false;
+
+
+#ifdef _WIN32
+
+    if (serverSocket != INVALID_SOCKET &&
+        serverSocket != -1)
+    {
+        closesocket(serverSocket);
+
+        serverSocket = -1;
+    }
+
+#else
+
+    if (serverSocket >= 0)
+    {
+        close(serverSocket);
+
+        serverSocket = -1;
+    }
+
+#endif
+}
+
+
+void Servidor::cerrar()
+{
+    activo = false;
+
+
+#ifdef _WIN32
+
+    if (serverSocket != INVALID_SOCKET &&
+        serverSocket != -1)
+    {
+        closesocket(serverSocket);
+
+        serverSocket = -1;
+    }
+
+    WSACleanup();
+
+#else
+
+    if (serverSocket >= 0)
+    {
+        close(serverSocket);
+
+        serverSocket = -1;
+    }
+
+#endif
 }

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include "administrador.hpp"
 #include "alumno.hpp"
@@ -15,12 +16,16 @@
 #include "materia.hpp"
 #include "inscripciones.hpp"
 #include "notificaciones.hpp"
+#include "ponderacion.hpp"
+#include "calificaciones.hpp"
 
 class SessionManager
 {
 private:
 
     SessionData datos;
+
+    static std::mutex mutexDatos;
     
     //--------------------------------
     //conversion dias
@@ -109,6 +114,38 @@ public:
         const std::string& nombre
     );
 
+    ///////////////////////////////////////////////////////////
+    // CALIFICACIONES
+    ///////////////////////////////////////////////////////////
+
+    bool registrarCalificacion(
+        int idAlumno,
+        int idTarea,
+        double calificacion
+    );
+
+    bool obtenerCalificacionesAlumno(
+        int idAlumno,
+        std::vector<Calificacion>& calificaciones
+    );
+
+    bool editarCalificacion(
+        int idAlumno,
+        int idTarea,
+        double calificacion
+    );
+
+    bool eliminarCalificacion(
+        int idAlumno,
+        int idTarea
+    );
+
+    bool obtenerCalificacionFinal(
+        int idAlumno,
+        int idMateria,
+        double& calificacionFinal
+    );
+
 
     ///////////////////////////////////////////////////////////
     // INSCRIPCIONES
@@ -140,7 +177,8 @@ public:
         const std::string& titulo,
         const std::string& fechaEntrega,
         const std::string& descripcion,
-        TipoTarea tipo
+        TipoTarea tipo,
+        int parcial
     );
 
     std::vector<Tarea> obtenerTareas() const;
@@ -150,10 +188,36 @@ public:
         const std::string& titulo,
         const std::string& fechaEntrega,
         const std::string& descripcion,
-        TipoTarea tipo
+        TipoTarea tipo,
+        int parcial
     );
 
     bool eliminarTarea( int idTarea);
+
+    ////////////////////////////////////////////////////////////
+    // PONDERACIONES
+    ////////////////////////////////////////////////////////////
+
+    bool configurarPonderacion(
+        int idMateria,
+        int parcial,
+        double tarea,
+        double examen,
+        double practica,
+        double proyecto,
+        double trabajo,
+        double otro
+    );
+
+    bool obtenerPonderacionesMateria(
+        int idMateria,
+        std::vector<Ponderacion>& ponderaciones
+    );
+
+    bool eliminarPonderacion(
+        int idMateria,
+        int parcial
+    );
 
     //////////////////////////////////////////////////////////
     // SUBTAREAS
@@ -248,4 +312,6 @@ public:
         int idNotificacion
     );
 
+    void generarRecordatorios();
+    
 };

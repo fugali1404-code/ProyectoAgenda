@@ -24,6 +24,7 @@ enum class TipoReferenciaNotificacion
 {
     NINGUNA,
     TAREA,
+    SUBTAREA,
     MATERIA,
     PROFESOR
 };

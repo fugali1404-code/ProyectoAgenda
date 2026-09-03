@@ -249,10 +249,8 @@ int Persistencia::generarIdMateria(
 
         std::string campo;
 
-        // =========================================
-        // idMateria
-        // =========================================
 
+        // idMateria
         if(!std::getline(ss, campo, ';'))
         {
             continue;
@@ -283,6 +281,203 @@ int Persistencia::generarIdMateria(
 
     return mayorId + 1;
 }
+
+
+///////////////////////////////////////////////////////////
+// Guardar Calificaciones
+///////////////////////////////////////////////////////////
+
+bool Persistencia::guardarCalificaciones(
+    const std::vector<Calificacion>& calificaciones,
+    const std::string& archivo
+)
+{
+    std::ofstream out(archivo);
+
+    if(!out.is_open())
+    {
+        return false;
+    }
+
+    //--------------------------------------------------
+    // Encabezado
+    //--------------------------------------------------
+
+    out
+        << "idAlumno|"
+        << "idTarea|"
+        << "calificacion"
+        << "\n";
+
+    //--------------------------------------------------
+    // Guardar calificaciones
+    //--------------------------------------------------
+
+    for(const auto& calificacion : calificaciones)
+    {
+        out
+            << calificacion.getIdAlumno()
+            << "|"
+            << calificacion.getIdTarea()
+            << "|"
+            << calificacion.getCalificacion()
+            << "\n";
+    }
+
+    out.close();
+
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////
+// Cargar Calificaciones
+///////////////////////////////////////////////////////////
+
+bool Persistencia::cargarCalificaciones(
+    std::vector<Calificacion>& calificaciones,
+    const std::string& archivo
+)
+{
+    std::ifstream in(archivo);
+
+    if(!in.is_open())
+    {
+        return false;
+    }
+
+    calificaciones.clear();
+
+    std::string linea;
+
+    //--------------------------------------------------
+    // Ignorar encabezado
+    //--------------------------------------------------
+
+    std::getline(in, linea);
+
+    //--------------------------------------------------
+    // Leer registros
+    //--------------------------------------------------
+
+    while(std::getline(in, linea))
+    {
+        if(linea.empty())
+        {
+            continue;
+        }
+
+        std::stringstream ss(linea);
+
+        std::string idAlumnoTexto;
+        std::string idTareaTexto;
+        std::string calificacionTexto;
+
+        //--------------------------------------------------
+        // ID alumno
+        //--------------------------------------------------
+
+        if(!std::getline(
+            ss,
+            idAlumnoTexto,
+            '|'))
+        {
+            continue;
+        }
+
+        //--------------------------------------------------
+        // ID tarea
+        //--------------------------------------------------
+
+        if(!std::getline(
+            ss,
+            idTareaTexto,
+            '|'))
+        {
+            continue;
+        }
+
+        //--------------------------------------------------
+        // Calificación
+        //--------------------------------------------------
+
+        if(!std::getline(
+            ss,
+            calificacionTexto,
+            '|'))
+        {
+            continue;
+        }
+
+        //--------------------------------------------------
+        // Convertir valores
+        //--------------------------------------------------
+
+        int idAlumno;
+        int idTarea;
+        double calificacion;
+
+        try
+        {
+            idAlumno = std::stoi(
+                idAlumnoTexto
+            );
+
+            idTarea = std::stoi(
+                idTareaTexto
+            );
+
+            calificacion = std::stod(
+                calificacionTexto
+            );
+        }
+        catch(...)
+        {
+            continue;
+        }
+
+        //--------------------------------------------------
+        // Validar
+        //--------------------------------------------------
+
+        if(idAlumno <= 0)
+        {
+            continue;
+        }
+
+        if(idTarea <= 0)
+        {
+            continue;
+        }
+
+        if(
+            calificacion < 0.0 ||
+            calificacion > 10.0
+        )
+        {
+            continue;
+        }
+
+        //--------------------------------------------------
+        // Crear calificación
+        //--------------------------------------------------
+
+        Calificacion nuevaCalificacion(
+            idAlumno,
+            idTarea,
+            calificacion
+        );
+
+        calificaciones.push_back(
+            nuevaCalificacion
+        );
+    }
+
+    in.close();
+
+    return true;
+}
+
 
 ///////////////////////////////////////////////////////////
 // Guardar Usuarios
@@ -436,9 +631,7 @@ Usuario* Persistencia::autenticarUsuario(
 {
     std::vector<Usuario*> usuarios;
 
-    if(!cargarUsuarios(
-        usuarios,
-        archivo))
+    if(!cargarUsuarios(usuarios,archivo))
     {
         return nullptr;
     }
@@ -507,9 +700,7 @@ int Persistencia::generarIdUsuario(
 {
     std::vector<Usuario*> usuarios;
 
-    if(!cargarUsuarios(
-        usuarios,
-        archivo))
+    if(!cargarUsuarios(usuarios,archivo))
     {
         return 1;
     }
@@ -543,10 +734,7 @@ bool Persistencia::agregarUsuario(
 {
     std::vector<Usuario*> usuarios;
 
-    cargarUsuarios(
-        usuarios,
-        archivo
-    );
+    cargarUsuarios(usuarios,archivo);
 
     Usuario* nuevo = nullptr;
 
@@ -588,10 +776,7 @@ bool Persistencia::agregarUsuario(
 
     usuarios.push_back(nuevo);
 
-    bool ok = guardarUsuarios(
-            usuarios,
-            archivo
-        );
+    bool ok = guardarUsuarios(usuarios,archivo);
 
     for(auto u : usuarios)
     {
@@ -640,11 +825,7 @@ bool Persistencia::actualizarUsuario(
 
     if(encontrado)
     {
-        ok =
-            guardarUsuarios(
-                usuarios,
-                archivo
-            );
+        ok = guardarUsuarios(usuarios,archivo);
     }
 
     for(auto u : usuarios)
@@ -666,16 +847,12 @@ bool Persistencia::eliminarUsuario(
 {
     std::vector<Usuario*> usuarios;
 
-    if(!cargarUsuarios(
-        usuarios,
-        archivo))
+    if(!cargarUsuarios(usuarios,archivo))
     {
         return false;
     }
 
-    for(auto it = usuarios.begin();
-        it != usuarios.end();
-        ++it)
+    for(auto it = usuarios.begin(); it != usuarios.end(); ++it)
     {
         if((*it)->getId() == idUsuario)
         {
@@ -687,8 +864,7 @@ bool Persistencia::eliminarUsuario(
         }
     }
 
-    bool ok =
-        guardarUsuarios(
+    bool ok = guardarUsuarios(
             usuarios,
             archivo
         );
@@ -769,24 +945,20 @@ bool Persistencia::guardarTareas(
         return false;
     }
 
-    //==================================================
+    
     // ENCABEZADO
-    //==================================================
-
     salida
         << "idTarea|"
         << "idMateria|"
         << "titulo|"
         << "fechaEntrega|"
         << "descripcion|"
-        << "tipo"
+        << "tipo|"
+        << "parcial"
         << "\n";
 
 
-    //==================================================
     // TAREAS
-    //==================================================
-
     for(const auto& tarea : tareas)
     {
         salida
@@ -795,9 +967,8 @@ bool Persistencia::guardarTareas(
             << tarea.getTitulo() << "|"
             << tarea.getFechaEntrega() << "|"
             << tarea.getDescripcion() << "|"
-            << tipoTareaAString(
-                tarea.getTipo()
-            )
+            << tipoTareaAString(tarea.getTipo()) << "|"
+            << tarea.getParcial()
             << "\n";
     }
 
@@ -827,10 +998,7 @@ bool Persistencia::cargarTareas(
     std::string linea;
 
 
-    //==================================================
     // SALTAR ENCABEZADO
-    //==================================================
-
     if(!std::getline(entrada, linea))
     {
         entrada.close();
@@ -839,10 +1007,7 @@ bool Persistencia::cargarTareas(
     }
 
 
-    //==================================================
     // CARGAR TAREAS
-    //==================================================
-
     while(std::getline(entrada, linea))
     {
         if(linea.empty())
@@ -858,82 +1023,44 @@ bool Persistencia::cargarTareas(
         std::string fechaEntrega;
         std::string descripcion;
         std::string tipoTexto;
+        std::string parcialTexto;
 
 
-        //==============================================
         // SEPARAR CAMPOS
-        //==============================================
-
-        std::getline(
-            ss,
-            idTexto,
-            '|'
-        );
-
-        std::getline(
-            ss,
-            materiaIdTexto,
-            '|'
-        );
-
-        std::getline(
-            ss,
-            titulo,
-            '|'
-        );
-
-        std::getline(
-            ss,
-            fechaEntrega,
-            '|'
-        );
-
-        std::getline(
-            ss,
-            descripcion,
-            '|'
-        );
-
-        std::getline(
-            ss,
-            tipoTexto,
-            '|'
-        );
+        std::getline(ss,idTexto,'|');
+        std::getline(ss,materiaIdTexto,'|');
+        std::getline(ss,titulo,'|');
+        std::getline(ss,fechaEntrega,'|');
+        std::getline(ss,descripcion,'|');
+        std::getline(ss,tipoTexto,'|');
+        std::getline(ss,parcialTexto,'|');
 
 
-        //==============================================
         // VALIDAR CAMPOS
-        //==============================================
-
         if(
             idTexto.empty() ||
             materiaIdTexto.empty() ||
             titulo.empty() ||
             fechaEntrega.empty() ||
             descripcion.empty() ||
-            tipoTexto.empty()
+            tipoTexto.empty() ||
+            parcialTexto.empty()
         )
         {
             continue;
         }
 
 
-        //==============================================
         // CONVERTIR IDS
-        //==============================================
-
         int id;
         int materiaId;
+        int parcial;
 
         try
         {
-            id = std::stoi(
-                idTexto
-            );
-
-            materiaId = std::stoi(
-                materiaIdTexto
-            );
+            id = std::stoi(idTexto);
+            materiaId = std::stoi(materiaIdTexto);
+            parcial = std::stoi(parcialTexto);
         }
         catch(...)
         {
@@ -941,27 +1068,27 @@ bool Persistencia::cargarTareas(
         }
 
 
-        //==============================================
+        // VALIDAR PARCIAL
+        if(parcial < 0)
+        {
+            continue;
+        }
+
+
+        
         // CONVERTIR TIPO
-        //==============================================
-
-        TipoTarea tipo =
-            stringATipoTarea(
-                tipoTexto
-            );
+        TipoTarea tipo = stringATipoTarea(tipoTexto);
 
 
-        //==============================================
         // CREAR TAREA
-        //==============================================
-
         Tarea tarea(
             id,
             materiaId,
             titulo,
             descripcion,
             fechaEntrega,
-            tipo
+            tipo,
+            parcial
         );
 
 
@@ -992,20 +1119,14 @@ int Persistencia::generarIdTarea(
 
     std::string linea;
 
-    //==================================================
     // Saltar encabezado
-    //==================================================
-
     if(!std::getline(entrada, linea))
     {
         entrada.close();
         return 1;
     }
 
-    //==================================================
     // Leer tareas
-    //==================================================
-
     while(std::getline(entrada, linea))
     {
         if(linea.empty())
@@ -1018,11 +1139,7 @@ int Persistencia::generarIdTarea(
         std::string idTexto;
 
         // El archivo utiliza |
-        std::getline(
-            ss,
-            idTexto,
-            '|'
-        );
+        std::getline(ss, idTexto,'|');
 
         if(idTexto.empty())
         {
@@ -1050,6 +1167,243 @@ int Persistencia::generarIdTarea(
 
     return mayorId + 1;
 }
+
+
+///////////////////////////////////////////////////////////
+// Guardar Ponderaciones
+///////////////////////////////////////////////////////////
+
+bool Persistencia::guardarPonderaciones(
+    const std::vector<Ponderacion>& ponderaciones,
+    const std::string& archivo
+)
+{
+    std::ofstream salida(archivo);
+
+    if(!salida.is_open())
+    {
+        return false;
+    }
+
+    
+    // ENCABEZADO
+    salida
+        << "idMateria|"
+        << "parcial|"
+        << "tarea|"
+        << "examen|"
+        << "practica|"
+        << "proyecto|"
+        << "trabajo|"
+        << "otro"
+        << "\n";
+
+
+   
+    // PONDERACIONES
+     for(const auto& ponderacion : ponderaciones)
+    {
+        salida
+            << ponderacion.getIdMateria()
+            << "|"
+
+            << ponderacion.getParcial()
+            << "|"
+
+            << ponderacion.getTarea()
+            << "|"
+
+            << ponderacion.getExamen()
+            << "|"
+
+            << ponderacion.getPractica()
+            << "|"
+
+            << ponderacion.getProyecto()
+            << "|"
+
+            << ponderacion.getTrabajo()
+            << "|"
+
+            << ponderacion.getOtro()
+            << "\n";
+    }
+
+    salida.close();
+
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////
+// Cargar Ponderaciones
+///////////////////////////////////////////////////////////
+
+bool Persistencia::cargarPonderaciones(
+    std::vector<Ponderacion>& ponderaciones,
+    const std::string& archivo
+)
+{
+    std::ifstream entrada(archivo);
+
+    if(!entrada.is_open())
+    {
+        return false;
+    }
+
+    // LIMPIAR VECTOR
+    ponderaciones.clear();
+
+    std::string linea;
+
+    // SALTAR ENCABEZADO
+    if(!std::getline(entrada,linea))
+    {
+        entrada.close();
+
+        return true;
+    }
+    
+    // CARGAR PONDERACIONES
+    while(std::getline(entrada,linea))
+    {
+        if(linea.empty())
+        {
+            continue;
+        }
+
+
+        // VARIABLES
+        std::stringstream ss(
+            linea
+        );
+
+        std::string idMateriaTexto;
+        std::string parcialTexto;
+        std::string tareaTexto;
+        std::string examenTexto;
+        std::string practicaTexto;
+        std::string proyectoTexto;
+        std::string trabajoTexto;
+        std::string otroTexto;
+
+
+        
+        // SEPARAR CAMPOS
+        std::getline(ss,idMateriaTexto,'|');
+
+        std::getline(ss,parcialTexto,'|');
+
+        std::getline(ss,tareaTexto,'|');
+
+        std::getline(ss,examenTexto,'|');
+
+        std::getline(ss,practicaTexto,'|');
+
+        std::getline(ss,proyectoTexto,'|');
+
+        std::getline(ss,trabajoTexto,'|');
+
+        std::getline(ss,otroTexto,'|');
+
+
+        
+        // VALIDAR CAMPOS
+       if(
+            idMateriaTexto.empty() ||
+            parcialTexto.empty() ||
+            tareaTexto.empty() ||
+            examenTexto.empty() ||
+            practicaTexto.empty() ||
+            proyectoTexto.empty() ||
+            trabajoTexto.empty() ||
+            otroTexto.empty()
+        )
+        {
+            continue;
+        }
+
+
+      
+        // VARIABLES CONVERTIDAS
+        int idMateria;
+        int parcial;
+
+        double tarea;
+        double examen;
+        double practica;
+        double proyecto;
+        double trabajo;
+        double otro;
+
+
+        // CONVERTIR DATOS
+        try
+        {
+            idMateria = std::stoi(idMateriaTexto);
+
+            parcial = std::stoi(parcialTexto);
+
+            tarea = std::stod(tareaTexto);
+
+            examen = std::stod(examenTexto);
+
+            practica = std::stod(practicaTexto);
+
+            proyecto = std::stod(proyectoTexto);
+
+            trabajo = std::stod(trabajoTexto);
+
+            otro = std::stod(otroTexto);
+
+        }
+        catch(...)
+        {
+            // Si una línea tiene datos inválidos,
+            // se ignora y se continúa con la siguiente.
+
+            continue;
+        }
+
+        // VALIDAR DATOS
+        if(
+            idMateria <= 0 ||
+            parcial < 0 ||
+            tarea < 0 ||
+            examen < 0 ||
+            practica < 0 ||
+            proyecto < 0 ||
+            trabajo < 0 ||
+            otro < 0
+        )
+        {
+            continue;
+        }
+
+
+        // CREAR PONDERACIÓN
+        Ponderacion ponderacion(
+            idMateria,
+            parcial,
+            tarea,
+            examen,
+            practica,
+            proyecto,
+            trabajo,
+            otro
+        );
+
+        // AGREGAR AL VECTOR
+        ponderaciones.push_back(ponderacion);
+
+    }
+
+
+    entrada.close();
+
+    return true;
+}
+
 
 ///////////////////////////////////////////////////////////
 // Guardar Subtareas
@@ -2076,8 +2430,12 @@ std::string Persistencia::tipoReferenciaNotificacionAString(
         case TipoReferenciaNotificacion::MATERIA:
             return "MATERIA";
 
+        case TipoReferenciaNotificacion::SUBTAREA:
+            return "SUBTAREA";
+            
         case TipoReferenciaNotificacion::PROFESOR:
             return "PROFESOR";
+        
     }
 
     return "NINGUNA";
@@ -2105,6 +2463,11 @@ Persistencia::stringATipoReferenciaNotificacion(
     if(texto == "MATERIA")
     {
         return TipoReferenciaNotificacion::MATERIA;
+    }
+
+    if(texto == "SUBTAREA")
+    {
+        return TipoReferenciaNotificacion::SUBTAREA;
     }
 
     if(texto == "PROFESOR")

@@ -27,6 +27,17 @@ private:
     std::string fechaEntrega;
     TipoTarea tipo;
 
+    //==================================================
+    // PARCIAL
+    //
+    // 0 = Ponderación general
+    // 1 = Parcial 1
+    // 2 = Parcial 2
+    // etc.
+    //==================================================
+
+    int parcial;
+
     // Se conserva por compatibilidad con el modelo actual.
     // El estado de completado por alumno se manejará
     // posteriormente mediante una persistencia independiente.
@@ -48,7 +59,8 @@ public:
         const std::string& titulo,
         const std::string& descripcion,
         const std::string& fechaEntrega,
-        TipoTarea tipo
+        TipoTarea tipo,
+        int parcial
     );
 
     //=====================
@@ -80,6 +92,8 @@ public:
     std::string getFechaEntrega() const;
 
     TipoTarea getTipo() const;
+
+    int getParcial() const;
 
     bool estaCompletada() const;
 
@@ -119,9 +133,14 @@ public:
         TipoTarea tipo
     );
 
+    void setParcial(
+        int parcial
+    );
+
     void setCompletada(
         bool completada
     );
 };
 
 #endif
+

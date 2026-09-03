@@ -54,6 +54,8 @@ add_executable(
     src/plannerDia.cpp
     src/plannerSemana.cpp
     src/estadoTareaAlumno.cpp
+    src/ponderacion.cpp
+    src/calificaciones.cpp
 
     # Red
     src/cliente.cpp
@@ -122,6 +124,8 @@ add_executable(
     src/plannerSemana.cpp
     src/estadoTareaAlumno.cpp
     src/notificaciones.cpp
+    src/ponderacion.cpp
+    src/calificaciones.cpp
 )
 
 target_link_libraries(
@@ -182,6 +186,8 @@ add_executable(
     src/plannerSemana.cpp
     src/estadoTareaAlumno.cpp
     src/notificaciones.cpp
+    src/ponderacion.cpp
+    src/calificaciones.cpp
 )
 
 target_link_libraries(

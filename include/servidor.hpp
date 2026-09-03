@@ -8,6 +8,7 @@ class Servidor
 private:
 
     int serverSocket;
+    bool activo;
 
 public:
 
@@ -21,11 +22,15 @@ public:
         int clienteSocket,
         std::string& mensaje
     );
-    
+
     bool enviarMensaje(
-    int clienteSocket,
-    const std::string& mensaje
+        int clienteSocket,
+        const std::string& mensaje
     );
+
+    bool estaActivo() const;
+
+    void detener();
 
     void cerrar();
 };

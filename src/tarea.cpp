@@ -14,6 +14,9 @@ Tarea::Tarea()
 
     tipo = TipoTarea::TAREA;
 
+    // 0 = ponderación general
+    parcial = 0;
+
     // Se conserva como estado inicial.
     // Más adelante el completado real se manejará
     // por alumno.
@@ -30,7 +33,8 @@ Tarea::Tarea(
     const std::string& titulo,
     const std::string& descripcion,
     const std::string& fechaEntrega,
-    TipoTarea tipo
+    TipoTarea tipo,
+    int parcial
 )
 {
     this->id = id;
@@ -39,6 +43,16 @@ Tarea::Tarea(
     this->descripcion = descripcion;
     this->fechaEntrega = fechaEntrega;
     this->tipo = tipo;
+
+    // Evitamos que una tarea tenga un parcial negativo.
+    if(parcial < 0)
+    {
+        this->parcial = 0;
+    }
+    else
+    {
+        this->parcial = parcial;
+    }
 
     completada = false;
 }
@@ -95,6 +109,11 @@ std::string Tarea::getFechaEntrega() const
 TipoTarea Tarea::getTipo() const
 {
     return tipo;
+}
+
+int Tarea::getParcial() const
+{
+    return parcial;
 }
 
 bool Tarea::estaCompletada() const
@@ -163,6 +182,20 @@ void Tarea::setTipo(
 )
 {
     this->tipo = tipo;
+}
+
+void Tarea::setParcial(
+    int parcial
+)
+{
+    if(parcial < 0)
+    {
+        this->parcial = 0;
+    }
+    else
+    {
+        this->parcial = parcial;
+    }
 }
 
 void Tarea::setCompletada(
