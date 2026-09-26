@@ -424,6 +424,11 @@ std::string SessionManager::obtenerIdentificador() const
     return datos.obtenerIdentificador();
 }
 
+int SessionManager::obtenerUsuarioId() const
+{
+    return datos.obtenerUsuarioId();
+}
+
 //-------------------------------Fechas--------------------------------------------
 
 ///////////////////////////////////////////////////////////
@@ -701,24 +706,12 @@ bool SessionManager::agregarMateria(
 
 std::string SessionManager::obtenerMaterias() const
 {
-    //==================================================
-    // AUTENTICACIÓN
-    //==================================================
-
     if(!datos.estaAutenticado())
     {
         return "NO_LOGIN";
     }
 
-    //==================================================
-    // BLOQUEAR ACCESO
-    //==================================================
-
     std::lock_guard<std::mutex> lock(mutexDatos);
-
-    //==================================================
-    // CARGAR MATERIAS ACTUALES
-    //==================================================
 
     std::vector<Materia> materias;
 
@@ -729,29 +722,40 @@ std::string SessionManager::obtenerMaterias() const
         return "MATERIAS|";
     }
 
-    //==================================================
-    // CONSTRUIR RESPUESTA
-    //==================================================
-
     std::string lista;
+
+    int profesorId = datos.obtenerUsuarioId();
 
     for(const auto& materia : materias)
     {
-        lista += std::to_string(
-            materia.getId()
-        );
+        // Solo agregar materias del profesor
+        // que tiene la sesión activa.
+        if(materia.getProfesorId() != profesorId)
+        {
+            continue;
+        }
 
-        lista += "|";
+        if(!lista.empty())
+        {
+            lista += "|";
+        }
 
-        lista += materia.getNombre();
-
-        lista += "|";
-
-        lista += std::to_string(
-            materia.getProfesorId()
-        );
+        lista +=
+            std::to_string(
+                materia.getId()
+            );
 
         lista += ";";
+
+        lista +=
+            materia.getNombre();
+
+        lista += ";";
+
+        lista +=
+            std::to_string(
+                materia.getProfesorId()
+            );
     }
 
     return "MATERIAS|" + lista;
@@ -3367,208 +3371,12 @@ std::string SessionManager::obtenerRol() const
 }
 
 ////////////////////////////////////////////////////////////
-// Inscribir Alumno
+// Inscribir Alumno(s)
 ////////////////////////////////////////////////////////////
 
 bool SessionManager::inscribirAlumno(
     int idMateria,
-    int idAlumno
-)
-{
-    
-    // Autenticación
-    if(!datos.estaAutenticado())
-    {
-        return false;
-    }
-
-    // Solo profesores
-    if(datos.obtenerRol() != "Profesor")
-    {
-        return false;
-    }
-
-    // Validar IDs
-    if(idMateria <= 0 || idAlumno <= 0)
-    {
-        return false;
-    }
-
-    std::lock_guard<std::mutex> lock(mutexDatos);
-
-    // Cargar materias
-    std::vector<Materia> materias;
-
-    if(!Persistencia::cargarMaterias(materias,"materias.txt"))
-    {
-        return false;
-    }
-
-    // Buscar materia y verificar propietario
-    bool materiaEncontrada = false;
-
-    for(const auto& materia : materias)
-    {
-        if(materia.getId() == idMateria)
-        {
-            materiaEncontrada = true;
-
-            // La materia debe pertenecer
-            // al profesor que está realizando
-            // la operación.
-
-            if(materia.getProfesorId() != datos.obtenerUsuarioId())
-            {
-                return false;
-            }
-
-            break;
-        }
-    }
-
-    if(!materiaEncontrada)
-    {
-        return false;
-    }
-
-    // Cargar usuarios
-    std::vector<Usuario*> usuarios;
-
-    if(!Persistencia::cargarUsuarios(usuarios,"usuarios.txt"))
-    {
-        return false;
-    }
-
-    // Verificar que el usuario sea alumno
-    bool alumnoEncontrado = false;
-
-    for(auto* usuario : usuarios)
-    {
-        if(usuario != nullptr && usuario->getId() == idAlumno)
-        {
-            if(usuario->getRol() == "Alumno")
-            {
-                alumnoEncontrado = true;
-            }
-
-            break;
-        }
-    }
-
-    // Liberar memoria
-    for(auto* usuario : usuarios)
-    {
-        delete usuario;
-    }
-
-    if(!alumnoEncontrado)
-    {
-        return false;
-    }
-
-    // Verificar que no esté inscrito
-    if(Inscripciones::estaInscrito(idMateria,idAlumno,"inscripciones.txt"))
-    {
-        return false;
-    }
-
-    // Cargar tareas existentes de la materia
-   std::vector<Tarea> tareas;
-
-    if(!Persistencia::cargarTareas(
-        tareas,
-        "tareas.txt"))
-    {
-        return false;
-    }
-
-    // Cargar estados existentes
-    std::vector<EstadoTareaAlumno> estados;
-
-    if(!Persistencia::cargarEstadosTareas(estados,"estadosTareas.txt"))
-    {
-        // Si el archivo todavía no existe,
-        // comenzamos con una lista vacía.
-
-        estados.clear();
-    }
-
-    // Crear estados para las tareas existentes de esta materia
-    for(const auto& tarea : tareas)
-    {
-        // Solo tareas de la materia
-        if(tarea.getMateriaId() != idMateria)
-        {
-            continue;
-        }
-
-        // Verificar si ya existe el estado
-        bool estadoExiste = false;
-
-        for(const auto& estado : estados)
-        {
-            if(estado.getTareaId() == tarea.getId() &&
-                estado.getAlumnoId() == idAlumno
-            )
-            {
-                estadoExiste = true;
-                break;
-            }
-        }
-
-        // Si no existe, crear estado inicial
-        if(!estadoExiste)
-        {
-            estados.emplace_back(
-                tarea.getId(),
-                idAlumno,
-                EstadoTarea::NO_COMPLETADO
-            );
-        }
-    }
-
-    // Crear inscripción
-    if(!Inscripciones::inscribirAlumno(idMateria,idAlumno,"inscripciones.txt"))
-    {
-        return false;
-    }
-
-    // Guardar estados de tareas
-    if(!Persistencia::guardarEstadosTareas(estados,"estadosTareas.txt"))
-    {
-        // Si no se pudieron guardar los estados,
-        // intentamos deshacer la inscripción para
-        // evitar dejar datos inconsistentes.
-
-        Inscripciones::desinscribirAlumno(
-            idMateria,
-            idAlumno,
-            "inscripciones.txt"
-        );
-
-        return false;
-    }
-
-    //==================================================
-    // IMPORTANTE:
-    //
-    // NO modificar planner.txt aquí.
-    //
-    // GET_PLANNER será quien determine qué tareas
-    // aparecen en la semana actual.
-    //==================================================
-
-    return true;
-}
-
-
-////////////////////////////////////////////////////////////
-// Desinscribir Alumno
-////////////////////////////////////////////////////////////
-
-bool SessionManager::desinscribirAlumno(
-    int idMateria,
-    int idAlumno
+    const std::string& boletas
 )
 {
     //==================================================
@@ -3590,13 +3398,375 @@ bool SessionManager::desinscribirAlumno(
     }
 
     //==================================================
-    // VALIDAR IDs
+    // VALIDAR ID DE MATERIA
     //==================================================
 
-    if(
-        idMateria <= 0 ||
-        idAlumno <= 0
-    )
+    if(idMateria <= 0)
+    {
+        return false;
+    }
+
+    //==================================================
+    // VALIDAR BOLETAS
+    //==================================================
+
+    if(boletas.empty())
+    {
+        return false;
+    }
+
+    //==================================================
+    // SEPARAR LAS BOLETAS
+    //==================================================
+
+    std::vector<std::string> listaBoletas;
+
+    std::stringstream ss(boletas);
+
+    std::string boleta;
+
+    while(std::getline(ss, boleta, ','))
+    {
+        if(!boleta.empty())
+        {
+            listaBoletas.push_back(boleta);
+        }
+    }
+
+    if(listaBoletas.empty())
+    {
+        return false;
+    }
+
+    //==================================================
+    // BLOQUEAR DATOS COMPARTIDOS
+    //==================================================
+
+    std::lock_guard<std::mutex> lock(mutexDatos);
+
+    //==================================================
+    // CARGAR MATERIAS
+    //==================================================
+
+    std::vector<Materia> materias;
+
+    if(!Persistencia::cargarMaterias(
+        materias,
+        "materias.txt"
+    ))
+    {
+        return false;
+    }
+
+    //==================================================
+    // VERIFICAR MATERIA Y PROFESOR
+    //==================================================
+
+    bool materiaEncontrada = false;
+
+    for(const auto& materia : materias)
+    {
+        if(materia.getId() == idMateria)
+        {
+            materiaEncontrada = true;
+
+            if(
+                materia.getProfesorId() !=
+                datos.obtenerUsuarioId()
+            )
+            {
+                return false;
+            }
+
+            break;
+        }
+    }
+
+    if(!materiaEncontrada)
+    {
+        return false;
+    }
+
+    //==================================================
+    // CARGAR USUARIOS
+    //==================================================
+
+    std::vector<Usuario*> usuarios;
+
+    if(!Persistencia::cargarUsuarios(
+        usuarios,
+        "usuarios.txt"
+    ))
+    {
+        return false;
+    }
+
+    //==================================================
+    // OBTENER IDS DE LOS ALUMNOS
+    //==================================================
+
+    std::vector<int> idsAlumnos;
+
+    for(const auto& boletaActual : listaBoletas)
+    {
+        int idAlumno = -1;
+
+        for(auto* usuario : usuarios)
+        {
+            if(usuario == nullptr)
+            {
+                continue;
+            }
+
+            if(
+                usuario->getRol() == "Alumno" &&
+                usuario->getIdentificador() == boletaActual
+            )
+            {
+                idAlumno = usuario->getId();
+                break;
+            }
+        }
+
+        // Si alguna boleta no existe,
+        // liberamos memoria y cancelamos.
+        if(idAlumno <= 0)
+        {
+            for(auto* usuario : usuarios)
+            {
+                delete usuario;
+            }
+
+            return false;
+        }
+
+        // Evitar que la misma boleta
+        // aparezca dos veces en el comando.
+        if(
+            std::find(
+                idsAlumnos.begin(),
+                idsAlumnos.end(),
+                idAlumno
+            ) == idsAlumnos.end()
+        )
+        {
+            idsAlumnos.push_back(idAlumno);
+        }
+    }
+
+    //==================================================
+    // LIBERAR MEMORIA DE USUARIOS
+    //==================================================
+
+    for(auto* usuario : usuarios)
+    {
+        delete usuario;
+    }
+
+    //==================================================
+    // VERIFICAR QUE NINGUNO
+    // YA ESTÉ INSCRITO
+    //==================================================
+
+    for(int idAlumno : idsAlumnos)
+    {
+        if(
+            Inscripciones::estaInscrito(
+                idMateria,
+                idAlumno,
+                "inscripciones.txt"
+            )
+        )
+        {
+            return false;
+        }
+    }
+
+    //==================================================
+    // CARGAR TAREAS DE LA MATERIA
+    //==================================================
+
+    std::vector<Tarea> tareas;
+
+    if(!Persistencia::cargarTareas(
+        tareas,
+        "tareas.txt"
+    ))
+    {
+        return false;
+    }
+
+    //==================================================
+    // CARGAR ESTADOS DE TAREAS
+    //==================================================
+
+    std::vector<EstadoTareaAlumno> estados;
+
+    if(!Persistencia::cargarEstadosTareas(
+        estados,
+        "estadosTareas.txt"
+    ))
+    {
+        estados.clear();
+    }
+
+    //==================================================
+    // CREAR ESTADOS PARA CADA ALUMNO
+    //==================================================
+
+    for(int idAlumno : idsAlumnos)
+    {
+        for(const auto& tarea : tareas)
+        {
+            if(tarea.getMateriaId() != idMateria)
+            {
+                continue;
+            }
+
+            bool estadoExiste = false;
+
+            for(const auto& estado : estados)
+            {
+                if(
+                    estado.getTareaId() == tarea.getId() &&
+                    estado.getAlumnoId() == idAlumno
+                )
+                {
+                    estadoExiste = true;
+                    break;
+                }
+            }
+
+            if(!estadoExiste)
+            {
+                estados.emplace_back(
+                    tarea.getId(),
+                    idAlumno,
+                    EstadoTarea::NO_COMPLETADO
+                );
+            }
+        }
+    }
+
+    //==================================================
+    // INSCRIBIR A TODOS LOS ALUMNOS
+    //==================================================
+
+    std::vector<int> alumnosInscritos;
+
+    for(int idAlumno : idsAlumnos)
+    {
+        if(
+            !Inscripciones::inscribirAlumno(
+                idMateria,
+                idAlumno,
+                "inscripciones.txt"
+            )
+        )
+        {
+            // Deshacer las inscripciones
+            // realizadas anteriormente.
+            for(int idInscrito : alumnosInscritos)
+            {
+                Inscripciones::desinscribirAlumno(
+                    idMateria,
+                    idInscrito,
+                    "inscripciones.txt"
+                );
+            }
+
+            return false;
+        }
+
+        alumnosInscritos.push_back(idAlumno);
+    }
+
+    //==================================================
+    // GUARDAR ESTADOS
+    //==================================================
+
+    if(!Persistencia::guardarEstadosTareas(
+        estados,
+        "estadosTareas.txt"
+    ))
+    {
+        // Deshacer las inscripciones
+        // si ocurre un error.
+        for(int idAlumno : alumnosInscritos)
+        {
+            Inscripciones::desinscribirAlumno(
+                idMateria,
+                idAlumno,
+                "inscripciones.txt"
+            );
+        }
+
+        return false;
+    }
+
+    return true;
+}
+
+////////////////////////////////////////////////////////////
+// Desinscribir Alumno(s)
+////////////////////////////////////////////////////////////
+
+bool SessionManager::desinscribirAlumno(
+    int idMateria,
+    const std::string& boletas
+)
+{
+    //==================================================
+    // AUTENTICACIÓN
+    //==================================================
+
+    if(!datos.estaAutenticado())
+    {
+        return false;
+    }
+
+    //==================================================
+    // SOLO PROFESORES
+    //==================================================
+
+    if(datos.obtenerRol() != "Profesor")
+    {
+        return false;
+    }
+
+    //==================================================
+    // VALIDAR DATOS
+    //==================================================
+
+    if(idMateria <= 0)
+    {
+        return false;
+    }
+
+    if(boletas.empty())
+    {
+        return false;
+    }
+
+    //==================================================
+    // SEPARAR LAS BOLETAS
+    //==================================================
+
+    std::vector<std::string> listaBoletas;
+
+    std::stringstream ss(boletas);
+
+    std::string boleta;
+
+    while(std::getline(ss, boleta, ','))
+    {
+        if(!boleta.empty())
+        {
+            listaBoletas.push_back(boleta);
+        }
+    }
+
+    if(listaBoletas.empty())
     {
         return false;
     }
@@ -3651,7 +3821,81 @@ bool SessionManager::desinscribirAlumno(
     }
 
     //==================================================
-    // VERIFICAR QUE EL ALUMNO ESTÉ INSCRITO
+    // CARGAR USUARIOS
+    //==================================================
+
+    std::vector<Usuario*> usuarios;
+
+    if(!Persistencia::cargarUsuarios(
+        usuarios,
+        "usuarios.txt"))
+    {
+        return false;
+    }
+
+    //==================================================
+    // CONVERTIR BOLETAS A IDS DE ALUMNOS
+    //==================================================
+
+    std::vector<int> idsAlumnos;
+
+    for(const std::string& boletaActual : listaBoletas)
+    {
+        int idAlumno = -1;
+
+        for(auto* usuario : usuarios)
+        {
+            if(usuario == nullptr)
+            {
+                continue;
+            }
+
+            if(
+                usuario->getRol() == "Alumno" &&
+                usuario->getIdentificador() == boletaActual
+            )
+            {
+                idAlumno = usuario->getId();
+                break;
+            }
+        }
+
+        // Si alguna boleta no existe
+        if(idAlumno <= 0)
+        {
+            for(auto* usuario : usuarios)
+            {
+                delete usuario;
+            }
+
+            return false;
+        }
+
+        // Evitar alumnos repetidos
+        if(
+            std::find(
+                idsAlumnos.begin(),
+                idsAlumnos.end(),
+                idAlumno
+            ) == idsAlumnos.end()
+        )
+        {
+            idsAlumnos.push_back(idAlumno);
+        }
+    }
+
+    //==================================================
+    // LIBERAR MEMORIA
+    //==================================================
+
+    for(auto* usuario : usuarios)
+    {
+        delete usuario;
+    }
+
+    //==================================================
+    // VERIFICAR QUE TODOS ESTÉN INSCRITOS
+    // ANTES DE MODIFICAR CUALQUIER ARCHIVO
     //==================================================
 
     std::vector<int> alumnosInscritos =
@@ -3660,21 +3904,23 @@ bool SessionManager::desinscribirAlumno(
             "inscripciones.txt"
         );
 
-    bool alumnoInscrito = false;
-
-    for(int id : alumnosInscritos)
+    for(int idAlumno : idsAlumnos)
     {
-        if(id == idAlumno)
+        bool alumnoInscrito = false;
+
+        for(int id : alumnosInscritos)
         {
-            alumnoInscrito = true;
-
-            break;
+            if(id == idAlumno)
+            {
+                alumnoInscrito = true;
+                break;
+            }
         }
-    }
 
-    if(!alumnoInscrito)
-    {
-        return false;
+        if(!alumnoInscrito)
+        {
+            return false;
+        }
     }
 
     //==================================================
@@ -3708,241 +3954,242 @@ bool SessionManager::desinscribirAlumno(
     }
 
     //==================================================
-    // ELIMINAR ESTADOS DEL ALUMNO
-    // DE LAS TAREAS DE LA MATERIA
+    // PROCESAR CADA ALUMNO
     //==================================================
 
-    std::vector<EstadoTareaAlumno> estados;
-
-    if(Persistencia::cargarEstadosTareas(
-        estados,
-        "estadosTareas.txt"))
+    for(int idAlumno : idsAlumnos)
     {
-        estados.erase(
-            std::remove_if(
-                estados.begin(),
-                estados.end(),
-                [&idsTareas, idAlumno](
-                    const EstadoTareaAlumno& estado
-                )
-                {
-                    // Verificar que sea del alumno
-                    if(
-                        estado.getAlumnoId() !=
-                        idAlumno
-                    )
-                    {
-                        return false;
-                    }
+        //==================================================
+        // ELIMINAR ESTADOS DEL ALUMNO
+        // DE LAS TAREAS DE LA MATERIA
+        //==================================================
 
-                    // Verificar que la tarea
-                    // pertenezca a esta materia
-                    return std::find(
-                        idsTareas.begin(),
-                        idsTareas.end(),
-                        estado.getTareaId()
-                    ) != idsTareas.end();
-                }
-            ),
-            estados.end()
-        );
+        std::vector<EstadoTareaAlumno> estados;
 
-        if(!Persistencia::guardarEstadosTareas(
+        if(Persistencia::cargarEstadosTareas(
             estados,
             "estadosTareas.txt"))
         {
-            return false;
-        }
-    }
-
-    //==================================================
-    // ELIMINAR CALIFICACIONES DEL ALUMNO
-    // DE LAS TAREAS DE LA MATERIA
-    //==================================================
-
-    std::vector<Calificacion> calificaciones;
-
-    if(Persistencia::cargarCalificaciones(
-        calificaciones,
-        "calificaciones.txt"))
-    {
-        calificaciones.erase(
-            std::remove_if(
-                calificaciones.begin(),
-                calificaciones.end(),
-                [&idsTareas, idAlumno](
-                    const Calificacion& calificacion
-                )
-                {
-                    // Verificar que sea del alumno
-                    if(
-                        calificacion.getIdAlumno() !=
-                        idAlumno
+            estados.erase(
+                std::remove_if(
+                    estados.begin(),
+                    estados.end(),
+                    [&idsTareas, idAlumno](
+                        const EstadoTareaAlumno& estado
                     )
                     {
-                        return false;
+                        if(
+                            estado.getAlumnoId() !=
+                            idAlumno
+                        )
+                        {
+                            return false;
+                        }
+
+                        return std::find(
+                            idsTareas.begin(),
+                            idsTareas.end(),
+                            estado.getTareaId()
+                        ) != idsTareas.end();
                     }
+                ),
+                estados.end()
+            );
 
-                    // Verificar que la tarea
-                    // pertenezca a esta materia
-                    return std::find(
-                        idsTareas.begin(),
-                        idsTareas.end(),
-                        calificacion.getIdTarea()
-                    ) != idsTareas.end();
-                }
-            ),
-            calificaciones.end()
-        );
+            if(!Persistencia::guardarEstadosTareas(
+                estados,
+                "estadosTareas.txt"))
+            {
+                return false;
+            }
+        }
 
-        if(!Persistencia::guardarCalificaciones(
+        //==================================================
+        // ELIMINAR CALIFICACIONES DEL ALUMNO
+        // DE LAS TAREAS DE LA MATERIA
+        //==================================================
+
+        std::vector<Calificacion> calificaciones;
+
+        if(Persistencia::cargarCalificaciones(
             calificaciones,
             "calificaciones.txt"))
         {
-            return false;
-        }
-    }
+            calificaciones.erase(
+                std::remove_if(
+                    calificaciones.begin(),
+                    calificaciones.end(),
+                    [&idsTareas, idAlumno](
+                        const Calificacion& calificacion
+                    )
+                    {
+                        if(
+                            calificacion.getIdAlumno() !=
+                            idAlumno
+                        )
+                        {
+                            return false;
+                        }
 
-    //==================================================
-    // CARGAR SUBTAREAS
-    //==================================================
+                        return std::find(
+                            idsTareas.begin(),
+                            idsTareas.end(),
+                            calificacion.getIdTarea()
+                        ) != idsTareas.end();
+                    }
+                ),
+                calificaciones.end()
+            );
 
-    std::vector<Subtarea> subtareas;
-
-    std::vector<int> idsSubtareas;
-
-    if(Persistencia::cargarSubtareas(
-        subtareas,
-        "subtareas.txt"))
-    {
-        //================================================
-        // OBTENER IDS DE SUBTAREAS
-        // DEL ALUMNO Y DE LAS TAREAS
-        // DE ESTA MATERIA
-        //================================================
-
-        for(const auto& subtarea : subtareas)
-        {
-            if(
-                subtarea.getAlumnoId() !=
-                idAlumno
-            )
+            if(!Persistencia::guardarCalificaciones(
+                calificaciones,
+                "calificaciones.txt"))
             {
-                continue;
-            }
-
-            for(int idTarea : idsTareas)
-            {
-                if(
-                    subtarea.getTareaId() ==
-                    idTarea
-                )
-                {
-                    idsSubtareas.push_back(
-                        subtarea.getId()
-                    );
-
-                    break;
-                }
+                return false;
             }
         }
 
-        //================================================
-        // ELIMINAR SUBTAREAS
-        //================================================
+        //==================================================
+        // CARGAR SUBTAREAS
+        //==================================================
 
-        subtareas.erase(
-            std::remove_if(
-                subtareas.begin(),
-                subtareas.end(),
-                [&idsSubtareas](
-                    const Subtarea& subtarea
-                )
-                {
-                    return std::find(
-                        idsSubtareas.begin(),
-                        idsSubtareas.end(),
-                        subtarea.getId()
-                    ) != idsSubtareas.end();
-                }
-            ),
-            subtareas.end()
-        );
+        std::vector<Subtarea> subtareas;
 
-        //================================================
-        // GUARDAR SUBTAREAS
-        //================================================
+        std::vector<int> idsSubtareas;
 
-        if(!Persistencia::guardarSubtareas(
+        if(Persistencia::cargarSubtareas(
             subtareas,
             "subtareas.txt"))
         {
-            return false;
-        }
-    }
+            //================================================
+            // OBTENER IDS DE SUBTAREAS
+            // DEL ALUMNO Y DE LAS TAREAS
+            // DE ESTA MATERIA
+            //================================================
 
-    //==================================================
-    // LIMPIAR PLANNER DEL ALUMNO
-    //==================================================
-
-    PlannerSemana planner;
-
-    if(Persistencia::cargarPlanner(
-        idAlumno,
-        planner,
-        "planner.txt"))
-    {
-        //================================================
-        // ELIMINAR TAREAS DE ESTA MATERIA
-        //================================================
-
-        for(int idTarea : idsTareas)
-        {
-            for(int i = 0; i < 7; ++i)
+            for(const auto& subtarea : subtareas)
             {
-                planner.getDia(i).eliminarTarea(
-                    idTarea
-                );
+                if(
+                    subtarea.getAlumnoId() !=
+                    idAlumno
+                )
+                {
+                    continue;
+                }
+
+                for(int idTarea : idsTareas)
+                {
+                    if(
+                        subtarea.getTareaId() ==
+                        idTarea
+                    )
+                    {
+                        idsSubtareas.push_back(
+                            subtarea.getId()
+                        );
+
+                        break;
+                    }
+                }
+            }
+
+            //================================================
+            // ELIMINAR SUBTAREAS
+            //================================================
+
+            subtareas.erase(
+                std::remove_if(
+                    subtareas.begin(),
+                    subtareas.end(),
+                    [&idsSubtareas](
+                        const Subtarea& subtarea
+                    )
+                    {
+                        return std::find(
+                            idsSubtareas.begin(),
+                            idsSubtareas.end(),
+                            subtarea.getId()
+                        ) != idsSubtareas.end();
+                    }
+                ),
+                subtareas.end()
+            );
+
+            //================================================
+            // GUARDAR SUBTAREAS
+            //================================================
+
+            if(!Persistencia::guardarSubtareas(
+                subtareas,
+                "subtareas.txt"))
+            {
+                return false;
             }
         }
 
-        //================================================
-        // ELIMINAR SUBTAREAS DE ESTA MATERIA
-        //================================================
+        //==================================================
+        // LIMPIAR PLANNER DEL ALUMNO
+        //==================================================
 
-        for(int idSubtarea : idsSubtareas)
-        {
-            for(int i = 0; i < 7; ++i)
-            {
-                planner.getDia(i).eliminarSubtarea(
-                    idSubtarea
-                );
-            }
-        }
+        PlannerSemana planner;
 
-        //================================================
-        // GUARDAR PLANNER
-        //================================================
-
-        if(!Persistencia::guardarPlanner(
+        if(Persistencia::cargarPlanner(
             idAlumno,
             planner,
             "planner.txt"))
         {
+            //================================================
+            // ELIMINAR TAREAS DE ESTA MATERIA
+            //================================================
+
+            for(int idTarea : idsTareas)
+            {
+                for(int i = 0; i < 7; ++i)
+                {
+                    planner.getDia(i).eliminarTarea(
+                        idTarea
+                    );
+                }
+            }
+
+            //================================================
+            // ELIMINAR SUBTAREAS DE ESTA MATERIA
+            //================================================
+
+            for(int idSubtarea : idsSubtareas)
+            {
+                for(int i = 0; i < 7; ++i)
+                {
+                    planner.getDia(i).eliminarSubtarea(
+                        idSubtarea
+                    );
+                }
+            }
+
+            //================================================
+            // GUARDAR PLANNER
+            //================================================
+
+            if(!Persistencia::guardarPlanner(
+                idAlumno,
+                planner,
+                "planner.txt"))
+            {
+                return false;
+            }
+        }
+
+        //==================================================
+        // ELIMINAR INSCRIPCIÓN
+        //==================================================
+
+        if(!Inscripciones::desinscribirAlumno(
+            idMateria,
+            idAlumno,
+            "inscripciones.txt"))
+        {
             return false;
         }
-    }
-
-    //==================================================
-    // ELIMINAR INSCRIPCIÓN
-    //==================================================
-
-    if(!Inscripciones::desinscribirAlumno(
-        idMateria,
-        idAlumno,
-        "inscripciones.txt"))
-    {
-        return false;
     }
 
     return true;
@@ -3959,17 +4206,27 @@ std::string SessionManager::obtenerAlumnosMateria(
 {
     std::lock_guard<std::mutex> lock(mutexDatos);
 
-
+    //==================================================
+    // AUTENTICACIÓN
+    //==================================================
 
     if(!datos.estaAutenticado())
     {
         return "NO_LOGIN";
     }
 
+    //==================================================
+    // SOLO PROFESORES
+    //==================================================
+
     if(datos.obtenerRol() != "Profesor")
     {
         return "ERROR|Solo los profesores pueden consultar alumnos";
     }
+
+    //==================================================
+    // VALIDAR ID
+    //==================================================
 
     if(idMateria <= 0)
     {
@@ -3977,20 +4234,22 @@ std::string SessionManager::obtenerAlumnosMateria(
     }
 
     //==================================================
-    // Cargar materias
+    // CARGAR MATERIAS
     //==================================================
 
     std::vector<Materia> materias;
 
     if(!Persistencia::cargarMaterias(
         materias,
-        "materias.txt"))
+        "materias.txt"
+    ))
     {
         return "ERROR|No se pudieron cargar las materias";
     }
 
     //==================================================
-    // Buscar materia
+    // VERIFICAR QUE LA MATERIA EXISTA
+    // Y PERTENEZCA AL PROFESOR
     //==================================================
 
     bool materiaEncontrada = false;
@@ -4004,7 +4263,8 @@ std::string SessionManager::obtenerAlumnosMateria(
             if(materia.getProfesorId() !=
                datos.obtenerUsuarioId())
             {
-                return "ERROR|La materia no pertenece al profesor";
+                return
+                    "ERROR|La materia no pertenece al profesor";
             }
 
             break;
@@ -4017,34 +4277,90 @@ std::string SessionManager::obtenerAlumnosMateria(
     }
 
     //==================================================
-    // Obtener alumnos
+    // OBTENER IDs DE LOS ALUMNOS INSCRITOS
     //==================================================
 
-    std::vector<int> alumnos =
+    std::vector<int> alumnosInscritos =
         Inscripciones::obtenerAlumnosMateria(
             idMateria,
             "inscripciones.txt"
         );
 
-    if(alumnos.empty())
+    // No hay alumnos inscritos
+    if(alumnosInscritos.empty())
     {
         return "ALUMNOS|";
     }
 
+    //==================================================
+    // CARGAR USUARIOS
+    //==================================================
+
+    std::vector<Usuario*> usuarios;
+
+    if(!Persistencia::cargarUsuarios(
+        usuarios,
+        "usuarios.txt"
+    ))
+    {
+        return "ERROR|No se pudieron cargar los usuarios";
+    }
+
+    //==================================================
+    // CONSTRUIR RESPUESTA
+    //==================================================
+
     std::string resultado = "ALUMNOS|";
 
-    for(std::size_t i = 0;
-        i < alumnos.size();
-        ++i)
-    {
-        resultado += std::to_string(
-            alumnos[i]
-        );
+    bool primerAlumno = true;
 
-        if(i + 1 < alumnos.size())
+    for(int idAlumno : alumnosInscritos)
+    {
+        for(const auto* usuario : usuarios)
         {
-            resultado += ";";
+            if(usuario == nullptr)
+            {
+                continue;
+            }
+
+            if(usuario->getId() == idAlumno &&
+               usuario->getRol() == "Alumno")
+            {
+                // Separar alumnos con |
+                if(!primerAlumno)
+                {
+                    resultado += "|";
+                }
+
+                // ID interno del alumno
+                resultado += std::to_string(
+                    usuario->getId()
+                );
+
+                resultado += ";";
+
+                // Nombre del alumno
+                resultado += usuario->getNombre();
+
+                resultado += ";";
+
+                // Boleta / identificador
+                resultado += usuario->getIdentificador();
+
+                primerAlumno = false;
+
+                break;
+            }
         }
+    }
+
+    //==================================================
+    // LIBERAR MEMORIA
+    //==================================================
+
+    for(auto* usuario : usuarios)
+    {
+        delete usuario;
     }
 
     return resultado;
@@ -4056,7 +4372,6 @@ std::string SessionManager::obtenerAlumnosMateria(
 
 std::string SessionManager::obtenerMateriasAlumno() const
 {
-
     std::lock_guard<std::mutex> lock(mutexDatos);
 
     if(!datos.estaAutenticado())
@@ -4069,38 +4384,130 @@ std::string SessionManager::obtenerMateriasAlumno() const
         return "ERROR|Solo los alumnos pueden consultar sus materias";
     }
 
-    std::vector<int> materias =
+    std::vector<int> materiasAlumno =
         Inscripciones::obtenerMateriasAlumno(
             datos.obtenerUsuarioId(),
             "inscripciones.txt"
         );
 
-    if(materias.empty())
+    if(materiasAlumno.empty())
     {
         return "MATERIAS_ALUMNO|";
     }
 
+    //-------------------------------------------------
+    // Cargar materias
+    //-------------------------------------------------
+
+    std::vector<Materia> materias;
+
+    if(!Persistencia::cargarMaterias(
+        materias,
+        "materias.txt"))
+    {
+        return "MATERIAS_ALUMNO|";
+    }
+
+    //-------------------------------------------------
+    // Cargar usuarios
+    //-------------------------------------------------
+
+    std::vector<Usuario*> usuarios;
+
+    Persistencia::cargarUsuarios(
+        usuarios,
+        "usuarios.txt"
+    );
+
+    //-------------------------------------------------
+    // Crear respuesta
+    //-------------------------------------------------
+
     std::string resultado =
         "MATERIAS_ALUMNO|";
 
-    for(std::size_t i = 0;
-        i < materias.size();
-        ++i)
-    {
-        resultado += std::to_string(
-            materias[i]
-        );
+    bool primeraMateria = true;
 
-        if(i + 1 < materias.size())
+    //-------------------------------------------------
+    // Recorrer materias inscritas
+    //-------------------------------------------------
+
+    for(int idMateria : materiasAlumno)
+    {
+        for(const auto& materia : materias)
         {
+            if(materia.getId() != idMateria)
+            {
+                continue;
+            }
+
+            //-------------------------------------------------
+            // Buscar profesor
+            //-------------------------------------------------
+
+            std::string nombreProfesor =
+                "No disponible";
+
+            for(auto* usuario : usuarios)
+            {
+                if(
+                    usuario != nullptr &&
+                    usuario->getId() ==
+                    materia.getProfesorId()
+                )
+                {
+                    nombreProfesor =
+                        usuario->getNombre();
+
+                    break;
+                }
+            }
+
+            //-------------------------------------------------
+            // Separador
+            //-------------------------------------------------
+
+            if(!primeraMateria)
+            {
+                resultado += "|";
+            }
+
+            //-------------------------------------------------
+            // Datos
+            //-------------------------------------------------
+
+            resultado +=
+                std::to_string(
+                    materia.getId()
+                );
+
             resultado += ";";
+
+            resultado +=
+                materia.getNombre();
+
+            resultado += ";";
+
+            resultado +=
+                nombreProfesor;
+
+            primeraMateria = false;
+
+            break;
         }
+    }
+
+    //-------------------------------------------------
+    // Liberar usuarios
+    //-------------------------------------------------
+
+    for(auto* usuario : usuarios)
+    {
+        delete usuario;
     }
 
     return resultado;
 }
-
-
 
 ////////////////////////////////////////////////////////////
 // Agregar Tarea
@@ -5220,7 +5627,6 @@ bool SessionManager::obtenerPonderacionesMateria(
         return false;
     }
 
-
     // VALIDAR ID
     if(idMateria <= 0)
     {
@@ -5260,6 +5666,10 @@ bool SessionManager::obtenerPonderacionesMateria(
     return true;
 }
 
+
+////////////////////////////////////////////////////////
+//Eliminar ponderación
+///////////////////////////////////////////////////////
 
 bool SessionManager::eliminarPonderacion(
     int idMateria,

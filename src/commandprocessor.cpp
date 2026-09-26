@@ -52,6 +52,23 @@ std::string CommandProcessor::procesar(
 
 
 
+    ///////////////////////////////////////////////////////
+    // GET_MI_ID
+    ///////////////////////////////////////////////////////
+
+    if(comando == "GET_MI_ID")
+    {
+        if(!session.estaAutenticado())
+        {
+            return "NO_LOGIN";
+        }
+
+        return
+            "MI_ID|" +
+            std::to_string(session.obtenerUsuarioId());
+    }
+
+
     ///////////////////////////////////////////////////////////
     // ADD_USUARIO
     ///////////////////////////////////////////////////////////
@@ -209,7 +226,7 @@ std::string CommandProcessor::procesar(
     }
 
     ///////////////////////////////////////////////////////////
-    // AGREGAR MATERIA
+    // ADD_MATERIA
     ///////////////////////////////////////////////////////////
 
     if(comando == "ADD_MATERIA")
@@ -270,7 +287,7 @@ std::string CommandProcessor::procesar(
 
 
     /////////////////////////////////////////////////////////
-    // ACTUALIZAR MATERIA
+    // UPDATE_MATERIA
     /////////////////////////////////////////////////////////
 
     if(comando == "UPDATE_MATERIA")
@@ -319,7 +336,7 @@ std::string CommandProcessor::procesar(
 
     
     ////////////////////////////////////////////////////////
-    // ELIMINAR MATERIA
+    // DELETE_MATERIA
     ////////////////////////////////////////////////////////
 
     if(comando == "DELETE_MATERIA")
@@ -734,19 +751,24 @@ std::string CommandProcessor::procesar(
         }
 
         int idMateria;
-        int idAlumno;
 
         try
         {
             idMateria = std::stoi(datos[1]);
-            idAlumno = std::stoi(datos[2]);
         }
         catch(...)
         {
-            return "ERROR|Los IDs deben ser numeros";
+            return "ERROR|El ID de materia debe ser un numero";
         }
 
-        if(session.inscribirAlumno(idMateria, idAlumno))
+        std::string boleta = datos[2];
+
+        if(boleta.empty())
+        {
+            return "ERROR|La boleta no puede estar vacia";
+        }
+
+        if(session.inscribirAlumno(idMateria, boleta))
         {
             return "ALUMNO_INSCRITO";
         }
@@ -772,26 +794,30 @@ std::string CommandProcessor::procesar(
         }
 
         int idMateria;
-        int idAlumno;
 
         try
         {
             idMateria = std::stoi(datos[1]);
-            idAlumno = std::stoi(datos[2]);
         }
         catch(...)
         {
-            return "ERROR|Los IDs deben ser numeros";
+            return "ERROR|El ID de materia debe ser un numero";
         }
 
-        if(session.desinscribirAlumno(idMateria, idAlumno))
+        std::string boleta = datos[2];
+
+        if(boleta.empty())
+        {
+            return "ERROR|La boleta no puede estar vacia";
+        }
+
+        if(session.desinscribirAlumno(idMateria,boleta))
         {
             return "ALUMNO_DESINSCRITO";
-        }   
+        }
 
         return "ERROR|No se pudo desinscribir al alumno";
     }
-
 
     ////////////////////////////////////////////////////////
     // GET_ALUMNOS_MATERIA
@@ -874,12 +900,8 @@ std::string CommandProcessor::procesar(
         std::string descripcion = datos[4];
         std::string tipoTexto = datos[5];
         std::string parcialTexto = datos[6];
-
-
     
         // VALIDAR DATOS
-   
-
         if(titulo.empty())
         {
             return "ERROR|Falta titulo";
@@ -957,10 +979,7 @@ std::string CommandProcessor::procesar(
             return "ERROR|Tipo de tarea invalido";
         }
 
-
         // CREAR TAREA
-   
-
         if(session.agregarTarea(
             idMateria,
             titulo,
@@ -996,18 +1015,18 @@ std::string CommandProcessor::procesar(
             respuesta += "|";
 
             respuesta += std::to_string(tarea.getId());
-            respuesta += ",";
+            respuesta += ";";
             respuesta +=
             std::to_string(tarea.getMateriaId());
-            respuesta += ",";
+            respuesta += ";";
             respuesta += tarea.getTitulo();
-            respuesta += ",";
+            respuesta += ";";
             respuesta += tarea.getFechaEntrega();
-            respuesta += ",";
+            respuesta += ";";
             respuesta += tarea.getDescripcion();
-            respuesta += ",";
+            respuesta += ";";
             respuesta += std::to_string(tarea.getParcial());
-            respuesta += ",";
+            respuesta += ";";
             respuesta += Persistencia::tipoTareaAString(tarea.getTipo());
         }
 
@@ -1030,8 +1049,6 @@ std::string CommandProcessor::procesar(
         {
             return "ERROR|Faltan parametros";
         }
-
-
 
         // ID DE TAREA
         int idTarea;

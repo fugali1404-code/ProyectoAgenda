@@ -65,6 +65,7 @@ add_executable(
     src/commandprocessor.cpp
     src/sessionmaneger.cpp
     src/sessiondata.cpp
+    
 
     # Persistencia
     src/persistencia.cpp
@@ -76,6 +77,14 @@ add_executable(
     src/SFML/dashboard.cpp
     src/SFML/planner.cpp
     src/SFML/textbox.cpp
+    src/SFML/sessioncliente.cpp
+    src/SFML/materiasView.cpp
+    src/SFML/tareasView.cpp
+
+    #Controladores
+    src/controllers/loginController.cpp
+    src/controllers/materiasController.cpp
+    src/controllers/tareasController.cpp
 )
 
 # ==========================

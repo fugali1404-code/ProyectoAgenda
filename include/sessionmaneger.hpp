@@ -153,12 +153,12 @@ public:
 
     bool inscribirAlumno(
         int idMateria,
-        int idAlumno
+        const std::string& boleta
     );
 
     bool desinscribirAlumno(
         int idMateria,
-        int idAlumno
+        const std::string& boleta
     );
 
     std::string obtenerAlumnosMateria(

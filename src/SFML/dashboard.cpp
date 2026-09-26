@@ -3,29 +3,14 @@
 DashboardView::DashboardView()
 {
     nombreAlumno = " ";
+
     boleta = " ";
 
-    txtNuevaMateria.setPosition(
-        330.f,
-        400.f
-    );
+    rol = " ";
 
-    txtNuevaMateria.setSize(
-        250.f,
-        35.f
-    );
+    desplazamientoMaterias = 0.f;
 
-    btnAgregarMateria.setSize(
-        {120.f,35.f}
-    );
-
-    btnAgregarMateria.setPosition(
-        {600.f,400.f}
-    );
-
-    btnAgregarMateria.setFillColor(
-        sf::Color(60,150,80)
-    );
+    scrollMateriasAnterior = 0.f;
 }
 
 bool DashboardView::cargarFuente(
@@ -39,17 +24,41 @@ void DashboardView::setAlumno(
     const std::string& boletaAlumno)
 {
     nombreAlumno = nombre;
+
     boleta = boletaAlumno;
 }
 
-void DashboardView::setMaterias(const std::vector<Materia>& lista)
+void DashboardView::setRol(
+    const std::string& rolUsuario)
+{
+    rol = rolUsuario;
+}
+
+void DashboardView::setMaterias(
+    const std::vector<Materia>& lista)
 {
     Materias = lista;
+
+    //-----------------------------------
+    // Reiniciar scroll
+    //-----------------------------------
+
+    desplazamientoMaterias = 0.f;
+
+    scrollMateriasAnterior = 0.f;
 }
 
 void DashboardView::limpiarMaterias()
 {
     Materias.clear();
+
+    //-----------------------------------
+    // Reiniciar scroll
+    //-----------------------------------
+
+    desplazamientoMaterias = 0.f;
+
+    scrollMateriasAnterior = 0.f;
 }
 
 void DashboardView::draw(
@@ -60,13 +69,9 @@ void DashboardView::draw(
     //-----------------------------------
 
     sf::Color sidebarColor(41,53,65);
-
     sf::Color tarjetaColor(255,255,255);
-
     sf::Color textoBlanco(255,255,255);
-
     sf::Color textoNegro(40,40,40);
-
     sf::Color bordeTarjeta(220,220,220);
 
     //-----------------------------------
@@ -75,13 +80,17 @@ void DashboardView::draw(
 
     sf::RectangleShape sidebar;
 
-    sidebar.setSize({250.f,720.f});
+    sidebar.setSize(
+        {250.f,720.f}
+    );
 
     sidebar.setFillColor(
         sidebarColor
     );
 
-    window.draw(sidebar);
+    window.draw(
+        sidebar
+    );
 
     //-----------------------------------
     // TITULO
@@ -93,7 +102,9 @@ void DashboardView::draw(
         "AGENDA\nESCOLAR"
     );
 
-    titulo.setCharacterSize(34);
+    titulo.setCharacterSize(
+        34
+    );
 
     titulo.setFillColor(
         textoBlanco
@@ -103,19 +114,24 @@ void DashboardView::draw(
         {20.f,20.f}
     );
 
-    window.draw(titulo);
+    window.draw(
+        titulo
+    );
 
     //-----------------------------------
-    // DATOS ALUMNO
+    // DATOS USUARIO
     //-----------------------------------
 
     sf::Text alumno(font);
 
     alumno.setString(
-        "Alumno:\n" + nombreAlumno
+        "Alumno:\n" +
+        nombreAlumno
     );
 
-    alumno.setCharacterSize(18);
+    alumno.setCharacterSize(
+        18
+    );
 
     alumno.setFillColor(
         textoBlanco
@@ -125,17 +141,20 @@ void DashboardView::draw(
         {20.f,120.f}
     );
 
-    window.draw(alumno);
-
-    //-----------------------------------
+    window.draw(
+        alumno
+    );
 
     sf::Text txtBoleta(font);
 
     txtBoleta.setString(
-        "Boleta:\n" + boleta
+        "Boleta:\n" +
+        boleta
     );
 
-    txtBoleta.setCharacterSize(18);
+    txtBoleta.setCharacterSize(
+        18
+    );
 
     txtBoleta.setFillColor(
         textoBlanco
@@ -145,7 +164,9 @@ void DashboardView::draw(
         {20.f,190.f}
     );
 
-    window.draw(txtBoleta);
+    window.draw(
+        txtBoleta
+    );
 
     //-----------------------------------
     // LINEA SEPARADORA
@@ -165,30 +186,45 @@ void DashboardView::draw(
         sf::Color(90,105,120)
     );
 
-    window.draw(linea);
+    window.draw(
+        linea
+    );
 
     //-----------------------------------
     // MENU
     //-----------------------------------
 
-    sf::Text planner(font);
+    //-----------------------------------
+    // PLANNER
+    //-----------------------------------
 
-    planner.setString(
-        "Planner"
-    );
+    if(rol == "Alumno")
+    {
+        sf::Text planner(font);
 
-    planner.setCharacterSize(24);
+        planner.setString(
+            "Planner"
+        );
 
-    planner.setFillColor(
-        textoBlanco
-    );
+        planner.setCharacterSize(
+            24
+        );
 
-    planner.setPosition(
-        {30.f,320.f}
-    );
+        planner.setFillColor(
+            textoBlanco
+        );
 
-    window.draw(planner);
+        planner.setPosition(
+            {30.f,320.f}
+        );
 
+        window.draw(
+            planner
+        );
+    }
+
+    //-----------------------------------
+    // MATERIAS
     //-----------------------------------
 
     sf::Text materias(font);
@@ -197,18 +233,33 @@ void DashboardView::draw(
         "Materias"
     );
 
-    materias.setCharacterSize(24);
+    materias.setCharacterSize(
+        24
+    );
 
     materias.setFillColor(
         textoBlanco
     );
 
-    materias.setPosition(
-        {30.f,380.f}
+    if(rol == "Alumno")
+    {
+        materias.setPosition(
+            {30.f,380.f}
+        );
+    }
+    else
+    {
+        materias.setPosition(
+            {30.f,320.f}
+        );
+    }
+
+    window.draw(
+        materias
     );
 
-    window.draw(materias);
-
+    //-----------------------------------
+    // TAREAS
     //-----------------------------------
 
     sf::Text tareas(font);
@@ -217,37 +268,59 @@ void DashboardView::draw(
         "Tareas"
     );
 
-    tareas.setCharacterSize(24);
+    tareas.setCharacterSize(
+        24
+    );
 
     tareas.setFillColor(
         textoBlanco
     );
 
-    tareas.setPosition(
-        {30.f,440.f}
-    );
+    if(rol == "Alumno")
+    {
+        tareas.setPosition(
+            {30.f,440.f}
+        );
+    }
+    else
+    {
+        tareas.setPosition(
+            {30.f,380.f}
+        );
+    }
 
-    window.draw(tareas);
+    window.draw(
+        tareas
+    );
 
     //-----------------------------------
+    // NOTIFICACIONES
+    //-----------------------------------
 
-    sf::Text notificaciones(font);
+    if(rol == "Alumno")
+    {
+        sf::Text notificaciones(font);
 
-    notificaciones.setString(
-        "Notificaciones"
-    );
+        notificaciones.setString(
+            "Notificaciones"
+        );
 
-    notificaciones.setCharacterSize(24);
+        notificaciones.setCharacterSize(
+            24
+        );
 
-    notificaciones.setFillColor(
-        textoBlanco
-    );
+        notificaciones.setFillColor(
+            textoBlanco
+        );
 
-    notificaciones.setPosition(
-        {30.f,500.f}
-    );
+        notificaciones.setPosition(
+            {30.f,500.f}
+        );
 
-    window.draw(notificaciones);
+        window.draw(
+            notificaciones
+        );
+    }
 
     //-----------------------------------
     // TARJETA TAREAS
@@ -267,15 +340,17 @@ void DashboardView::draw(
         tarjetaColor
     );
 
-    tarjeta1.setOutlineThickness(2);
+    tarjeta1.setOutlineThickness(
+        2
+    );
 
     tarjeta1.setOutlineColor(
         bordeTarjeta
     );
 
-    window.draw(tarjeta1);
-
-    //-----------------------------------
+    window.draw(
+        tarjeta1
+    );
 
     sf::Text prox(font);
 
@@ -283,7 +358,9 @@ void DashboardView::draw(
         "Proximas tareas"
     );
 
-    prox.setCharacterSize(28);
+    prox.setCharacterSize(
+        28
+    );
 
     prox.setFillColor(
         textoNegro
@@ -293,17 +370,19 @@ void DashboardView::draw(
         {320.f,70.f}
     );
 
-    window.draw(prox);
-
-    //-----------------------------------
+    window.draw(
+        prox
+    );
 
     sf::Text tarea1(font);
 
     tarea1.setString(
-        "• Proyecto Final Programacion"
+        "- Proyecto Final Programacion"
     );
 
-    tarea1.setCharacterSize(20);
+    tarea1.setCharacterSize(
+        20
+    );
 
     tarea1.setFillColor(
         textoNegro
@@ -313,17 +392,19 @@ void DashboardView::draw(
         {330.f,130.f}
     );
 
-    window.draw(tarea1);
-
-    //-----------------------------------
+    window.draw(
+        tarea1
+    );
 
     sf::Text tarea2(font);
 
     tarea2.setString(
-        "• Reporte de Fisica"
+        "- Reporte de Fisica"
     );
 
-    tarea2.setCharacterSize(20);
+    tarea2.setCharacterSize(
+        20
+    );
 
     tarea2.setFillColor(
         textoNegro
@@ -333,7 +414,9 @@ void DashboardView::draw(
         {330.f,170.f}
     );
 
-    window.draw(tarea2);
+    window.draw(
+        tarea2
+    );
 
     //-----------------------------------
     // TARJETA MATERIAS
@@ -353,15 +436,17 @@ void DashboardView::draw(
         tarjetaColor
     );
 
-    tarjeta2.setOutlineThickness(2);
+    tarjeta2.setOutlineThickness(
+        2
+    );
 
     tarjeta2.setOutlineColor(
         bordeTarjeta
     );
 
-    window.draw(tarjeta2);
-
-    //-----------------------------------
+    window.draw(
+        tarjeta2
+    );
 
     sf::Text materiasActivas(font);
 
@@ -369,7 +454,9 @@ void DashboardView::draw(
         "Materias Activas"
     );
 
-    materiasActivas.setCharacterSize(28);
+    materiasActivas.setCharacterSize(
+        28
+    );
 
     materiasActivas.setFillColor(
         textoNegro
@@ -379,68 +466,286 @@ void DashboardView::draw(
         {320.f,340.f}
     );
 
-    window.draw(materiasActivas);
-
-    //-----------------------------------
-
-    std::string textoMaterias;
-
-    for(const auto& materia : Materias)
-    {
-        textoMaterias += "• ";
-        textoMaterias += materia.getNombre();
-        textoMaterias += "\n\n";
-    }
-
-    if(textoMaterias.empty())
-    {
-        textoMaterias = "No hay materias registradas.";
-    }
-
-    sf::Text listaMaterias(font);
-
-    listaMaterias.setString(textoMaterias);
-
-    listaMaterias.setCharacterSize(20);
-
-    listaMaterias.setFillColor(textoNegro);
-
-    listaMaterias.setPosition({330.f,400.f});
-
-    window.draw(listaMaterias);
-
-    //-----------------------------------
-    // NUEVA MATERIA
-    //-----------------------------------
-
-    txtNuevaMateria.draw(
-    window,
-    font
-    );
-
     window.draw(
-        btnAgregarMateria
+        materiasActivas
     );
 
-    sf::Text agregar(font);
+    //-----------------------------------
+    // AREA VISIBLE DE MATERIAS
+    //-----------------------------------
 
-    agregar.setString(
-        "Agregar"
-    );
+    const float inicioX = 330.f;
 
-    agregar.setCharacterSize(
-        18
-    );
+    const float inicioY = 400.f;
 
-    agregar.setFillColor(
-        sf::Color::White
-    );
+    const float limiteSuperior = 395.f;
 
-    agregar.setPosition(
-        {620.f,405.f}
-    );
+    const float limiteInferior = 615.f;
 
-    window.draw(agregar);
+    const float espacioVertical = 45.f;
+
+    //-----------------------------------
+    // CANTIDAD DE MATERIAS
+    //-----------------------------------
+
+    std::size_t cantidadMaterias =
+        Materias.size();
+
+    //-----------------------------------
+    // CALCULAR MAXIMO SCROLL
+    //-----------------------------------
+
+    float contenidoAltura = 0.f;
+
+    if(cantidadMaterias > 0)
+    {
+        contenidoAltura =
+            cantidadMaterias *
+            espacioVertical;
+    }
+
+    float areaVisible =
+        limiteInferior -
+        limiteSuperior;
+
+    float maximoScroll =
+        contenidoAltura -
+        areaVisible;
+
+    if(maximoScroll < 0.f)
+    {
+        maximoScroll = 0.f;
+    }
+
+    //-----------------------------------
+    // ASEGURAR QUE EL SCROLL SEA VALIDO
+    //-----------------------------------
+
+    if(desplazamientoMaterias < 0.f)
+    {
+        desplazamientoMaterias = 0.f;
+    }
+
+    if(desplazamientoMaterias > maximoScroll)
+    {
+        desplazamientoMaterias =
+            maximoScroll;
+    }
+
+    //-----------------------------------
+    // NO HAY MATERIAS
+    //-----------------------------------
+
+    if(cantidadMaterias == 0)
+    {
+        sf::Text listaMaterias(font);
+
+        listaMaterias.setString(
+            "No hay materias registradas."
+        );
+
+        listaMaterias.setCharacterSize(
+            20
+        );
+
+        listaMaterias.setFillColor(
+            textoNegro
+        );
+
+        listaMaterias.setPosition(
+            {330.f,400.f}
+        );
+
+        window.draw(
+            listaMaterias
+        );
+    }
+
+    //-----------------------------------
+    // MATERIAS
+    //-----------------------------------
+
+    else
+    {
+        for(std::size_t i = 0;
+            i < cantidadMaterias;
+            ++i)
+        {
+            float y =
+                inicioY +
+                (i * espacioVertical) -
+                desplazamientoMaterias;
+
+            //-----------------------------------
+            // Solo dibujar dentro del area
+            //-----------------------------------
+
+            if(y < limiteSuperior)
+            {
+                continue;
+            }
+
+            if(y > limiteInferior)
+            {
+                continue;
+            }
+
+            //-----------------------------------
+            // Materia
+            //-----------------------------------
+
+            sf::Text materiaTexto(font);
+
+            materiaTexto.setString(
+                "- " +
+                Materias[i].getNombre()
+            );
+
+            materiaTexto.setCharacterSize(
+                20
+            );
+
+            materiaTexto.setFillColor(
+                textoNegro
+            );
+
+            materiaTexto.setPosition(
+                {inicioX,y}
+            );
+
+            window.draw(
+                materiaTexto
+            );
+        }
+    }
+
+    //-----------------------------------
+    // INDICADOR SUPERIOR
+    //-----------------------------------
+
+    if(desplazamientoMaterias > 0.f)
+    {
+        sf::Text flechaArriba(font);
+
+        flechaArriba.setString(
+            "^"
+        );
+
+        flechaArriba.setCharacterSize(
+            18
+        );
+
+        flechaArriba.setFillColor(
+            textoNegro
+        );
+
+        flechaArriba.setPosition(
+            {1190.f,390.f}
+        );
+
+        window.draw(
+            flechaArriba
+        );
+    }
+
+    //-----------------------------------
+    // INDICADOR INFERIOR
+    //-----------------------------------
+
+    if(desplazamientoMaterias < maximoScroll)
+    {
+        sf::Text flechaAbajo(font);
+
+        flechaAbajo.setString(
+            "v"
+        );
+
+        flechaAbajo.setCharacterSize(
+            18
+        );
+
+        flechaAbajo.setFillColor(
+            textoNegro
+        );
+
+        flechaAbajo.setPosition(
+            {1190.f,600.f}
+        );
+
+        window.draw(
+            flechaAbajo
+        );
+    }
+
+    //-----------------------------------
+    // BARRA DE SCROLL
+    //-----------------------------------
+
+    if(maximoScroll > 0.f)
+    {
+        //-----------------------------------
+        // Fondo de la barra
+        //-----------------------------------
+
+        sf::RectangleShape fondoScroll;
+
+        fondoScroll.setSize(
+            {6.f,190.f}
+        );
+
+        fondoScroll.setPosition(
+            {1200.f,410.f}
+        );
+
+        fondoScroll.setFillColor(
+            sf::Color(225,225,225)
+        );
+
+        window.draw(
+            fondoScroll
+        );
+
+        //-----------------------------------
+        // Tamaño del indicador
+        //-----------------------------------
+
+        float alturaBarra =
+            190.f *
+            (areaVisible / contenidoAltura);
+
+        if(alturaBarra < 30.f)
+        {
+            alturaBarra = 30.f;
+        }
+
+        //-----------------------------------
+        // Posición del indicador
+        //-----------------------------------
+
+        float posicionBarra =
+            410.f +
+            (desplazamientoMaterias /
+            maximoScroll) *
+            (190.f - alturaBarra);
+
+        sf::RectangleShape barraScroll;
+
+        barraScroll.setSize(
+            {6.f,alturaBarra}
+        );
+
+        barraScroll.setPosition(
+            {1200.f,posicionBarra}
+        );
+
+        barraScroll.setFillColor(
+            sf::Color(120,120,120)
+        );
+
+        window.draw(
+            barraScroll
+        );
+    }
 }
 
 void DashboardView::manejarEvento(
@@ -448,42 +753,88 @@ void DashboardView::manejarEvento(
     const sf::RenderWindow& window
 )
 {
-    txtNuevaMateria.handleEvent(
-        event,
-        window
-    );
-}
+    //-----------------------------------
+    // RUEDA DEL MOUSE
+    //-----------------------------------
 
-bool DashboardView::botonAgregarPresionado(
-    const sf::RenderWindow& window
-) const
-{
-    if(
-        sf::Mouse::isButtonPressed(
-            sf::Mouse::Button::Left
-        )
-    )
+    if(const auto* rueda =
+        event.getIf<
+        sf::Event::MouseWheelScrolled>())
     {
-        auto posicion =
-            window.mapPixelToCoords(
-                sf::Mouse::getPosition(window)
+        //-----------------------------------
+        // Posición del mouse
+        //-----------------------------------
+
+        sf::Vector2i posicionMouse =
+            sf::Mouse::getPosition(
+                window
             );
 
-        return
-            btnAgregarMateria
-            .getGlobalBounds()
-            .contains(posicion);
+        //-----------------------------------
+        // Verificar si el mouse esta
+        // dentro de la tarjeta
+        //-----------------------------------
+
+        if(posicionMouse.x >= 290 &&
+           posicionMouse.x <= 1240 &&
+           posicionMouse.y >= 320 &&
+           posicionMouse.y <= 640)
+        {
+            //-----------------------------------
+            // Cantidad de materias
+            //-----------------------------------
+
+            std::size_t cantidadMaterias =
+                Materias.size();
+
+            //-----------------------------------
+            // Espacio disponible
+            //-----------------------------------
+
+            float areaVisible =
+                615.f - 395.f;
+
+            //-----------------------------------
+            // Altura del contenido
+            //-----------------------------------
+
+            float contenidoAltura =
+                cantidadMaterias * 45.f;
+
+            //-----------------------------------
+            // Calcular maximo scroll
+            //-----------------------------------
+
+            float maximoScroll =
+                contenidoAltura -
+                areaVisible;
+
+            if(maximoScroll < 0.f)
+            {
+                maximoScroll = 0.f;
+            }
+
+            //-----------------------------------
+            // Desplazar
+            //-----------------------------------
+
+            desplazamientoMaterias -=
+                rueda->delta * 30.f;
+
+            //-----------------------------------
+            // Limites
+            //-----------------------------------
+
+            if(desplazamientoMaterias < 0.f)
+            {
+                desplazamientoMaterias = 0.f;
+            }
+
+            if(desplazamientoMaterias > maximoScroll)
+            {
+                desplazamientoMaterias =
+                    maximoScroll;
+            }
+        }
     }
-
-    return false;
-}
-
-std::string DashboardView::obtenerNuevaMateria() const
-{
-    return txtNuevaMateria.getText();
-}
-
-void DashboardView::limpiarNuevaMateria()
-{
-    txtNuevaMateria.clear();
 }
