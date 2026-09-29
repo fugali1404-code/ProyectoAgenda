@@ -45,7 +45,7 @@ LoginView::LoginView()
     );
 
     botonLogin.setFillColor(
-        sf::Color(60,150,80)
+        sf::Color(41, 53, 65)
     );
 
     //---------------------------------
@@ -320,6 +320,72 @@ void LoginView::manejarEvento(
     const sf::Event& event,
     const sf::RenderWindow& window)
 {
+    //-------------------------------------------------
+    // CLIC DEL MOUSE
+    //-------------------------------------------------
+
+    if(const auto* mouse =
+        event.getIf<sf::Event::MouseButtonPressed>())
+    {
+        //-------------------------------------------------
+        // VISTA LOGICA
+        //-------------------------------------------------
+
+        sf::View vistaLogica(
+            sf::FloatRect(
+                {0.f, 0.f},
+                {1280.f, 720.f}
+            )
+        );
+
+        //-------------------------------------------------
+        // CONVERTIR COORDENADAS
+        //-------------------------------------------------
+
+        sf::Vector2f posicion =
+            window.mapPixelToCoords(
+                {
+                    mouse->position.x,
+                    mouse->position.y
+                },
+                vistaLogica
+            );
+
+        //-------------------------------------------------
+        // USUARIO
+        //-------------------------------------------------
+
+        bool usuarioSeleccionado =
+            posicion.x >= 490.f &&
+            posicion.x <= 790.f &&
+            posicion.y >= 270.f &&
+            posicion.y <= 310.f;
+
+        //-------------------------------------------------
+        // PASSWORD
+        //-------------------------------------------------
+
+        bool passwordSeleccionado =
+            posicion.x >= 490.f &&
+            posicion.x <= 790.f &&
+            posicion.y >= 370.f &&
+            posicion.y <= 410.f;
+
+        usuarioBox.setSelected(
+            usuarioSeleccionado
+        );
+
+        passwordBox.setSelected(
+            passwordSeleccionado
+        );
+
+        return;
+    }
+
+    //-------------------------------------------------
+    // EVENTOS DE TECLADO
+    //-------------------------------------------------
+
     usuarioBox.handleEvent(
         event,
         window
@@ -329,7 +395,7 @@ void LoginView::manejarEvento(
         event,
         window
     );
-}
+} 
 
 bool LoginView::loginPresionado(
     const sf::RenderWindow& window,
@@ -337,17 +403,23 @@ bool LoginView::loginPresionado(
 ) const
 {
     if(const auto* mouse =
-        event.getIf<
-            sf::Event::MouseButtonPressed>())
+        event.getIf<sf::Event::MouseButtonPressed>())
     {
-        sf::Vector2f posicion(
-            static_cast<float>(
-                mouse->position.x
-            ),
-            static_cast<float>(
-                mouse->position.y
+        sf::View vistaLogica(
+            sf::FloatRect(
+                {0.f, 0.f},
+                {1280.f, 720.f}
             )
         );
+
+        sf::Vector2f posicion =
+            window.mapPixelToCoords(
+                {
+                    mouse->position.x,
+                    mouse->position.y
+                },
+                vistaLogica
+            );
 
         return botonLogin
             .getGlobalBounds()

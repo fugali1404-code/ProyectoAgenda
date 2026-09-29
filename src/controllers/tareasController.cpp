@@ -191,7 +191,7 @@ bool TareasController::agregarTarea(
         return false;
     }
 
-    if(parcial < 1)
+    if(parcial < 0)
     {
         return false;
     }
@@ -261,7 +261,7 @@ bool TareasController::editarTarea(
         return false;
     }
 
-    if(parcial < 1)
+    if(parcial < 0)
     {
         return false;
     }

@@ -8,6 +8,9 @@
 #include "SFML/dashboard.hpp"
 #include "SFML/materiasView.hpp"
 #include "SFML/tareasView.hpp"
+#include "SFML/plannerView.hpp"
+#include "SFML/notificacionesView.hpp"
+#include "SFML/usuariosView.hpp"
 
 #include "networkmanager.hpp"
 #include "SFML/sessioncliente.hpp"
@@ -15,6 +18,9 @@
 #include "controllers/loginController.hpp"
 #include "controllers/materiasController.hpp"
 #include "controllers/tareasController.hpp"
+#include "controllers/plannerController.hpp"
+#include "controllers/notificacionesController.hpp"
+#include "controllers/usuariosController.hpp"
 
 #include "SFML/vistaActual.hpp"
 
@@ -42,8 +48,7 @@ int main()
 
     LoginView login;
 
-    if(!login.cargarFuente(
-        "../assets/arial.ttf"))
+    if(!login.cargarFuente("../assets/arial.ttf"))
     {
         return 1;
     }
@@ -56,6 +61,18 @@ int main()
     DashboardView dashboard;
 
     if(!dashboard.cargarFuente("../assets/arial.ttf"))
+    {
+        return 1;
+    }
+
+
+    //-------------------------------------------------
+    // USUARIOS
+    //-------------------------------------------------
+
+    UsuariosView usuariosView;
+
+    if(!usuariosView.cargarFuente("../assets/arial.ttf"))
     {
         return 1;
     }
@@ -80,6 +97,30 @@ int main()
     TareasView tareasView;
 
     if(!tareasView.cargarFuente("../assets/arial.ttf"))
+    {
+        return 1;
+    }
+
+
+    //-------------------------------------------------
+    // Planner
+    //-------------------------------------------------
+
+    PlannerView plannerView;
+
+    if(!plannerView.cargarFuente("../assets/arial.ttf"))
+    {
+        return 1;
+    }
+
+
+    //-------------------------------------------------
+    // Notificaciones
+    //-------------------------------------------------
+
+    NotificacionesView notificacionesView;
+
+    if(!notificacionesView.cargarFuente("../assets/arial.ttf"))
     {
         return 1;
     }
@@ -120,6 +161,16 @@ int main()
 
 
     //-------------------------------------------------
+    // Controller Usuarios
+    //-------------------------------------------------
+
+    UsuariosController usuariosController(
+        network,
+        session
+    );
+
+
+    //-------------------------------------------------
     // Controller Materias
     //-------------------------------------------------
 
@@ -142,6 +193,26 @@ int main()
 
 
     //-------------------------------------------------
+    // Controller Planner
+    //-------------------------------------------------
+
+    PlannerController plannerController(
+        network,
+        session
+    );
+
+
+    //-------------------------------------------------
+    // Controller Notificaciones
+    //-------------------------------------------------
+
+    NotificacionesController notificacionesController(
+        network,
+        session
+    );
+
+
+    //-------------------------------------------------
     // Vista actual
     //-------------------------------------------------
 
@@ -157,6 +228,7 @@ int main()
     {
         std::vector<Materia> materias =
             materiasController.obtenerMaterias();
+
 
         //-------------------------------------------------
         // Materias en Dashboard
@@ -188,6 +260,7 @@ int main()
             materiasController.obtenerProfesores()
         );
 
+
         //-------------------------------------------------
         // Cantidad de alumnos
         //-------------------------------------------------
@@ -218,41 +291,46 @@ int main()
         }
     };
 
-    
+
     //-------------------------------------------------
     // FUNCION PARA CARGAR PONDERACIONES
     //-------------------------------------------------
 
-    auto cargarPonderaciones =[&](int idMateria)
+    auto cargarPonderaciones = [&](int idMateria)
     {
-        std::vector<MateriasController::PonderacionMateria> 
-            ponderacionesController = materiasController.obtenerPonderaciones(idMateria);
+        std::vector<
+            MateriasController::PonderacionMateria
+        > ponderacionesController =
+            materiasController.obtenerPonderaciones(
+                idMateria
+            );
 
-        std::vector<MateriasView::PonderacionMateria> ponderacionesView;
+        std::vector<
+            MateriasView::PonderacionMateria
+        > ponderacionesView;
+
 
         for(const auto& ponderacion : ponderacionesController)
         {
-
             MateriasView::PonderacionMateria dato;
 
-           dato.parcial = ponderacion.parcial;
-           dato.tarea = ponderacion.tarea;
-           dato.examen = ponderacion.examen;
-           dato.practica = ponderacion.practica;
-           dato.proyecto = ponderacion.proyecto;
-           dato.trabajo = ponderacion.trabajo;
-           dato.otro = ponderacion.otro;
+            dato.parcial = ponderacion.parcial;
+            dato.tarea = ponderacion.tarea;
+            dato.examen = ponderacion.examen;
+            dato.practica = ponderacion.practica;
+            dato.proyecto = ponderacion.proyecto;
+            dato.trabajo = ponderacion.trabajo;
+            dato.otro = ponderacion.otro;
 
-           ponderacionesView.push_back(dato);
+            ponderacionesView.push_back(dato);
         }
 
-        materiasView.setPonderaciones(ponderacionesView);
-
-
+        materiasView.setPonderaciones(
+            ponderacionesView
+        );
     };
-    
-    
-    
+
+
     //-------------------------------------------------
     // FUNCION PARA ACTUALIZAR TAREAS
     //-------------------------------------------------
@@ -271,10 +349,11 @@ int main()
 
 
         //-------------------------------------------------
-        // Obtener tareas de la materia seleccionada
+        // Obtener materia seleccionada
         //-------------------------------------------------
 
-        int idMateria = tareasView.obtenerMateriaSeleccionada();
+        int idMateria =
+            tareasView.obtenerMateriaSeleccionada();
 
         if(idMateria == -1)
         {
@@ -282,6 +361,10 @@ int main()
             return;
         }
 
+
+        //-------------------------------------------------
+        // Cargar tareas
+        //-------------------------------------------------
 
         tareasView.setTareas(
             tareasController.obtenerTareasMateria(
@@ -296,117 +379,213 @@ int main()
 
         tareasView.limpiarEstados();
 
-        
+
         if(session.obtenerRol() == "Alumno")
         {
-    std::vector<EstadoTareaAlumno> estados;
+            std::vector<EstadoTareaAlumno> estados;
 
-    if(tareasController.cargarEstadosAlumno(
-        EstadoTarea::COMPLETADO))
-    {
-        const auto completados =
-            tareasController.obtenerEstadosTarea();
 
-        for(const auto& estado : completados)
-        {
-            for(const auto& tarea :
-                tareasController.obtenerTareasMateria(
-                    idMateria))
+            //-------------------------------------------------
+            // Completados
+            //-------------------------------------------------
+
+            if(tareasController.cargarEstadosAlumno(
+                EstadoTarea::COMPLETADO))
             {
-                if(
-                    estado.getTareaId() ==
-                    tarea.getId()
-                )
+                const auto completados =
+                    tareasController.obtenerEstadosTarea();
+
+                for(const auto& estado : completados)
                 {
-                    estados.push_back(estado);
-                    break;
-                }
-            }
-        }
-    }
-
-    if(tareasController.cargarEstadosAlumno(EstadoTarea::NO_COMPLETADO))
-    {
-        const auto noCompletados =
-            tareasController.obtenerEstadosTarea();
-
-        for(const auto& estado :
-            noCompletados)
-        {
-            bool existe = false;
-
-            for(const auto& existente : estados)
-            {
-                if(
-                    existente.getTareaId() ==
-                    estado.getTareaId()
-                )
-                {
-                    existe = true;
-                    break;
-                }
-            }
-
-            if(!existe)
-            {
-                for(const auto& tarea :
-                    tareasController.obtenerTareasMateria(
-                        idMateria))
-                {
-                    if(
-                        estado.getTareaId() ==
-                        tarea.getId()
-                    )
+                    for(const auto& tarea :
+                        tareasController.obtenerTareasMateria(
+                            idMateria))
                     {
-                        estados.push_back(estado);
-                        break;
+                        if(estado.getTareaId() ==
+                           tarea.getId())
+                        {
+                            estados.push_back(estado);
+                            break;
+                        }
                     }
                 }
             }
+
+
+            //-------------------------------------------------
+            // No completados
+            //-------------------------------------------------
+
+            if(tareasController.cargarEstadosAlumno(
+                EstadoTarea::NO_COMPLETADO))
+            {
+                const auto noCompletados =
+                    tareasController.obtenerEstadosTarea();
+
+                for(const auto& estado : noCompletados)
+                {
+                    bool existe = false;
+
+                    for(const auto& existente : estados)
+                    {
+                        if(existente.getTareaId() ==
+                           estado.getTareaId())
+                        {
+                            existe = true;
+                            break;
+                        }
+                    }
+
+                    if(!existe)
+                    {
+                        for(const auto& tarea :
+                            tareasController.obtenerTareasMateria(
+                                idMateria))
+                        {
+                            if(estado.getTareaId() ==
+                               tarea.getId())
+                            {
+                                estados.push_back(estado);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            tareasView.setEstadosTarea(
+                estados
+            );
+
+
+            //-------------------------------------------------
+            // Calificaciones del alumno
+            //-------------------------------------------------
+
+            try
+            {
+                int idAlumno = -1;
+
+                if(tareasController.obtenerIdAlumnoActual(
+                    idAlumno))
+                {
+                    if(tareasController.cargarCalificacionesAlumno(
+                        idAlumno))
+                    {
+                        tareasView.setCalificaciones(
+                            tareasController.obtenerCalificaciones()
+                        );
+                    }
+                    else
+                    {
+                        tareasView.limpiarCalificaciones();
+                    }
+                }
+                else
+                {
+                    tareasView.limpiarCalificaciones();
+                }
+            }
+            catch(...)
+            {
+                tareasView.limpiarCalificaciones();
+            }
         }
-    }
+    };
 
-    tareasView.setEstadosTarea(estados);
 
     //-------------------------------------------------
-    // CARGAR CALIFICACIONES DEL ALUMNO
+    // FUNCION PARA ACTUALIZAR PLANNER
     //-------------------------------------------------
 
-    try
+    auto cargarPlanner = [&]()
     {
-        int idAlumno = -1;
+        if(session.obtenerRol() != "Alumno")
+        {
+            return false;
+        }
 
-if(
-    tareasController.obtenerIdAlumnoActual(
-        idAlumno
-    )
-)
-{
-    if(
-        tareasController.cargarCalificacionesAlumno(
-            idAlumno
-        )
-    )
-    {
-        tareasView.setCalificaciones(
-            tareasController.obtenerCalificaciones()
+        if(!tareasController.cargarTareas() ||
+           !plannerController.recargar())
+        {
+            return false;
+        }
+
+        plannerView.setPlanner(
+            plannerController.obtenerPlanner()
         );
-    }
-    else
+
+        plannerView.setSubtareas(
+            plannerController.obtenerSubtareas()
+        );
+
+        plannerView.setTareas(
+            tareasController.obtenerTareas()
+        );
+
+        plannerView.setMaterias(
+            materiasController.obtenerMaterias()
+        );
+
+
+        std::vector<
+            PlannerView::EstadoTareaPlanner
+        > estadosPlanner;
+
+
+        for(const auto& estado :
+            plannerController.obtenerEstadosTareas())
+        {
+            PlannerView::EstadoTareaPlanner estadoView;
+
+            estadoView.idTarea = estado.idTarea;
+            estadoView.estado = estado.estado;
+
+            estadosPlanner.push_back(
+                estadoView
+            );
+        }
+
+
+        plannerView.setEstadosTareas(
+            estadosPlanner
+        );
+
+        return true;
+    };
+
+
+    //-------------------------------------------------
+    // FUNCION PARA ACTUALIZAR NOTIFICACIONES
+    //-------------------------------------------------
+
+    auto cargarNotificaciones = [&]()
     {
-        tareasView.limpiarCalificaciones();
-    }
-}
-else
-{
-    tareasView.limpiarCalificaciones();
-}
-    }
-    catch(...)
-    {
-        tareasView.limpiarCalificaciones();
-    }
-}
+        if(!notificacionesController.cargarNotificaciones())
+        {
+            notificacionesView.limpiarNotificaciones();
+            return false;
+        }
+
+        tareasController.cargarTareas();
+
+
+        notificacionesView.setNotificaciones(
+            notificacionesController.obtenerNotificaciones()
+        );
+
+
+        notificacionesView.setTareas(
+            tareasController.obtenerTareas()
+        );
+
+
+        notificacionesView.setMaterias(
+            materiasController.obtenerMaterias()
+        );
+
+        return true;
     };
 
 
@@ -416,16 +595,13 @@ else
 
     while(window.isOpen())
     {
-        while(const auto event =
-            window.pollEvent())
+        while(const auto event = window.pollEvent())
         {
-
             //-------------------------------------------------
             // CERRAR VENTANA
             //-------------------------------------------------
 
-            if(event->is<
-                sf::Event::Closed>())
+            if(event->is<sf::Event::Closed>())
             {
                 window.close();
             }
@@ -435,8 +611,7 @@ else
             // LOGIN
             //-------------------------------------------------
 
-            if(vistaActual ==
-                VistaActual::LOGIN)
+            if(vistaActual == VistaActual::LOGIN)
             {
                 loginController.manejarEvento(
                     *event,
@@ -467,9 +642,45 @@ else
                         correo,
                         password))
                     {
+                        //-------------------------------------------------
+                        // ADMINISTRADOR
+                        //-------------------------------------------------
+
+                        if(session.obtenerRol() ==
+                           "Administrador")
+                        {
+                            //-------------------------------------------------
+                            // Cargar usuarios
+                            //-------------------------------------------------
+
+                            if(usuariosController.cargarUsuarios())
+                            {
+                                usuariosView.setUsuarios(
+                                    usuariosController.obtenerUsuarios()
+                                );
+                            }
+                            else
+                            {
+                                usuariosView.setUsuarios(
+                                    {}
+                                );
+                            }
+
+
+                            //-------------------------------------------------
+                            // Entrar directamente a Usuarios
+                            //-------------------------------------------------
+
+                            vistaActual =
+                                VistaActual::USUARIOS;
+
+                            continue;
+                        }
+
 
                         //-------------------------------------------------
-                        // Dashboard
+                        // DASHBOARD
+                        // Alumno / Profesor
                         //-------------------------------------------------
 
                         dashboard.setAlumno(
@@ -495,28 +706,50 @@ else
                         // Tareas
                         //-------------------------------------------------
 
-                        //cargarMaterias();
                         tareasView.setRol(
                             session.obtenerRol()
                         );
 
+
                         //-------------------------------------------------
-                        // Seleccionar primera materia
+                        // Cargar materias
                         //-------------------------------------------------
 
                         std::vector<Materia> materias =
                             materiasController.obtenerMaterias();
 
+
+                        //-------------------------------------------------
+                        // Dashboard
+                        //-------------------------------------------------
+
+                        dashboard.setMaterias(
+                            materias
+                        );
+
+
+                        //-------------------------------------------------
+                        // Tareas - profesores
+                        //-------------------------------------------------
+
                         tareasView.setProfesores(
                             materiasController.obtenerProfesores()
                         );
 
+
+                        //-------------------------------------------------
+                        // Primera materia
+                        //-------------------------------------------------
+
                         if(!materias.empty())
                         {
-                            tareasView.setMaterias(materias);
+                            tareasView.setMaterias(
+                                materias
+                            );
 
-                            tareasView.setMateriaSeleccionada(materias[0].getId());
-
+                            tareasView.setMateriaSeleccionada(
+                                materias[0].getId()
+                            );
                         }
                         else
                         {
@@ -534,7 +767,7 @@ else
 
 
                         //-------------------------------------------------
-                        // Cambiar a Dashboard
+                        // Entrar al Dashboard
                         //-------------------------------------------------
 
                         vistaActual =
@@ -545,11 +778,210 @@ else
 
 
             //-------------------------------------------------
+            // USUARIOS
+            //-------------------------------------------------
+
+            //-------------------------------------------------
+// USUARIOS
+//-------------------------------------------------
+else if(vistaActual == VistaActual::USUARIOS)
+{
+    usuariosView.manejarEvento(
+        *event,
+        window
+    );
+
+
+    //-------------------------------------------------
+    // AGREGAR
+    //-------------------------------------------------
+
+    if(usuariosView.botonAgregarPresionado(
+        window,
+        *event))
+    {
+        // UsuariosView abre el formulario.
+    }
+
+
+    //-------------------------------------------------
+    // EDITAR
+    //-------------------------------------------------
+
+    int indiceEditar = -1;
+
+    if(usuariosView.botonEditarPresionado(
+        window,
+        *event,
+        indiceEditar))
+    {
+        // UsuariosView abre el formulario.
+    }
+
+
+    //-------------------------------------------------
+    // ELIMINAR
+    //-------------------------------------------------
+
+    int indiceEliminar = -1;
+
+    if(usuariosView.botonEliminarPresionado(
+        window,
+        *event,
+        indiceEliminar))
+    {
+        // UsuariosView solamente muestra
+        // la ventana de confirmación.
+    }
+
+
+    //-------------------------------------------------
+    // CONFIRMACIÓN DE ELIMINACIÓN
+    //-------------------------------------------------
+
+    if(usuariosView.confirmacionAceptada())
+    {
+        int indice =
+            usuariosView.obtenerUsuarioEliminar();
+
+        const auto& usuarios =
+            usuariosController.obtenerUsuarios();
+
+        if(indice >= 0 &&
+           indice < static_cast<int>(usuarios.size()))
+        {
+            int idUsuario =
+                usuarios[indice].id;
+
+            if(usuariosController.eliminarUsuario(
+                idUsuario))
+            {
+                usuariosController.recargar();
+
+                usuariosView.setUsuarios(
+                    usuariosController.obtenerUsuarios()
+                );
+
+                usuariosView.mostrarMensaje(
+                    "Usuario eliminado correctamente."
+                );
+            }
+            else
+            {
+                usuariosView.mostrarMensaje(
+                    "No se pudo eliminar el usuario."
+                );
+            }
+        }
+    }
+
+
+    //-------------------------------------------------
+    // CANCELAR ELIMINACIÓN
+    //-------------------------------------------------
+
+    if(usuariosView.confirmacionCancelada())
+    {
+        // La ventana de confirmación ya fue cerrada
+        // por UsuariosView.
+    }
+
+
+    //-------------------------------------------------
+    // FORMULARIO ACEPTADO
+    //-------------------------------------------------
+
+    if(usuariosView.formularioAceptado())
+    {
+        const UsuarioDatos& datos =
+            usuariosView.obtenerDatosFormulario();
+
+
+        //-------------------------------------------------
+        // EDITAR USUARIO
+        //-------------------------------------------------
+
+        if(usuariosView.formularioEsEdicion())
+        {
+            if(usuariosController.actualizarUsuario(
+                datos.id,
+                datos.nombre,
+                datos.correo,
+                datos.password,
+                datos.identificador))
+            {
+                usuariosController.recargar();
+
+                usuariosView.setUsuarios(
+                    usuariosController.obtenerUsuarios()
+                );
+
+                usuariosView.mostrarMensaje(
+                    "Usuario actualizado correctamente."
+                );
+
+                usuariosView.cerrarFormulario();
+            }
+            else
+            {
+                usuariosView.mostrarMensaje(
+                    "No se pudo actualizar el usuario."
+                );
+            }
+        }
+
+
+        //-------------------------------------------------
+        // AGREGAR USUARIO
+        //-------------------------------------------------
+
+        else
+        {
+            if(usuariosController.agregarUsuario(
+                datos.rol,
+                datos.nombre,
+                datos.correo,
+                datos.password,
+                datos.identificador))
+            {
+                usuariosController.recargar();
+
+                usuariosView.setUsuarios(
+                    usuariosController.obtenerUsuarios()
+                );
+
+                usuariosView.mostrarMensaje(
+                    "Usuario agregado correctamente."
+                );
+
+                usuariosView.cerrarFormulario();
+            }
+            else
+            {
+                usuariosView.mostrarMensaje(
+                    "No se pudo agregar el usuario."
+                );
+            }
+        }
+    }
+
+
+    //-------------------------------------------------
+    // CANCELAR FORMULARIO
+    //-------------------------------------------------
+
+    if(usuariosView.formularioCancelado())
+    {
+        usuariosView.cerrarFormulario();
+    }
+}
+
+
+            //-------------------------------------------------
             // DASHBOARD
             //-------------------------------------------------
 
-            else if(vistaActual ==
-                    VistaActual::DASHBOARD)
+            else if(vistaActual == VistaActual::DASHBOARD)
             {
                 dashboard.manejarEvento(
                     *event,
@@ -558,66 +990,92 @@ else
 
 
                 //-------------------------------------------------
-                // MATERIAS
-                //
-                // Se mantiene M como acceso a materias.
+                // BOTON MATERIAS
                 //-------------------------------------------------
 
-                if(event->is<
-                    sf::Event::KeyPressed>())
+                if(dashboard.botonMateriasPresionado(
+                    window,
+                    *event))
                 {
-                    const auto* tecla =
-                        event->getIf<
-                            sf::Event::KeyPressed>();
+                    cargarMaterias();
+
+                    vistaActual =
+                        VistaActual::MATERIAS;
+                }
 
 
-                    if(tecla != nullptr)
+                //-------------------------------------------------
+                // BOTON TAREAS
+                //-------------------------------------------------
+
+                else if(dashboard.botonTareasPresionado(
+                    window,
+                    *event))
+                {
+                    cargarMaterias();
+
+
+                    std::vector<Materia> materias =
+                        materiasController.obtenerMaterias();
+
+
+                    tareasView.setMaterias(
+                        materias
+                    );
+
+
+                    if(!materias.empty())
                     {
-                        //-------------------------------------------------
-                        // MATERIAS
-                        //-------------------------------------------------
+                        tareasView.setMateriaSeleccionada(
+                            materias[0].getId()
+                        );
 
-                        if(tecla->code ==
-                            sf::Keyboard::Key::M)
+                        cargarTareas();
+                    }
+                    else
+                    {
+                        tareasView.limpiarTareas();
+                    }
+
+
+                    vistaActual =
+                        VistaActual::TAREAS;
+                }
+
+
+                //-------------------------------------------------
+                // BOTON PLANNER
+                //-------------------------------------------------
+
+                else if(dashboard.botonPlannerPresionado(
+                    window,
+                    *event))
+                {
+                    if(session.obtenerRol() == "Alumno")
+                    {
+                        if(cargarPlanner())
                         {
-                            cargarMaterias();
-
                             vistaActual =
-                                VistaActual::MATERIAS;
+                                VistaActual::PLANNER;
                         }
+                    }
+                }
 
 
-                        //-------------------------------------------------
-                        // TAREAS
-                        //-------------------------------------------------
+                //-------------------------------------------------
+                // BOTON NOTIFICACIONES
+                //-------------------------------------------------
 
-                        else if(tecla->code ==
-                            sf::Keyboard::Key::T)
+                else if(dashboard.botonNotificacionesPresionado(
+                    window,
+                    *event))
+                {
+                    if(session.obtenerRol() == "Alumno")
+                    {
+                        if(cargarNotificaciones())
                         {
-                            cargarMaterias();
-
-                            std::vector<Materia> materias =
-                                materiasController.obtenerMaterias();
-
-                            tareasView.setMaterias(
-                                materias
-                            );
-
-                            if(!materias.empty())
-                            {
-                                tareasView.setMateriaSeleccionada(
-                                    materias[0].getId()
-                                );
-
-                                cargarTareas();
-                            }
-                            else
-                            {
-                                tareasView.limpiarTareas();
-                            }
-
                             vistaActual =
-                                VistaActual::TAREAS;
+                                VistaActual::NOTIFICACIONES;
                         }
                     }
                 }
@@ -630,12 +1088,6 @@ else
 
             else if(vistaActual == VistaActual::MATERIAS)
             {
-
-
-                //-------------------------------------------------
-                // Eventos de la vista
-                //-------------------------------------------------
-
                 materiasView.manejarEvento(
                     *event,
                     window
@@ -652,7 +1104,8 @@ else
                 {
                     materiasView.cerrarFormularios();
 
-                    vistaActual = VistaActual::DASHBOARD;
+                    vistaActual =
+                        VistaActual::DASHBOARD;
                 }
 
 
@@ -672,11 +1125,16 @@ else
                 // GUARDAR AGREGAR
                 //-------------------------------------------------
 
-                if(materiasView.botonGuardarAgregarPresionado(window, *event))
+                if(materiasView.botonGuardarAgregarPresionado(
+                    window,
+                    *event))
                 {
-                    std::string nombre = materiasView.obtenerNuevaMateria();
+                    std::string nombre =
+                        materiasView.obtenerNuevaMateria();
 
-                    if(materiasController.agregarMateria(nombre))
+
+                    if(materiasController.agregarMateria(
+                        nombre))
                     {
                         cargarMaterias();
 
@@ -691,7 +1149,9 @@ else
                 // CANCELAR AGREGAR
                 //-------------------------------------------------
 
-                if(materiasView.botonCancelarAgregarPresionado(window, *event))
+                if(materiasView.botonCancelarAgregarPresionado(
+                    window,
+                    *event))
                 {
                     materiasView.limpiarNuevaMateria();
 
@@ -703,7 +1163,9 @@ else
                 // EDITAR
                 //-------------------------------------------------
 
-                if(materiasView.botonEditarPresionado(window, *event))
+                if(materiasView.botonEditarPresionado(
+                    window,
+                    *event))
                 {
                     // Solo abre formulario.
                 }
@@ -713,14 +1175,20 @@ else
                 // GUARDAR EDITAR
                 //-------------------------------------------------
 
-                if(materiasView.botonGuardarEditarPresionado(window, *event))
+                if(materiasView.botonGuardarEditarPresionado(
+                    window,
+                    *event))
                 {
-                    int idMateria = materiasView.obtenerIdMateriaSeleccionada();
+                    int idMateria =
+                        materiasView.obtenerIdMateriaSeleccionada();
 
-                    std::string nombre = materiasView.obtenerNombreEditar();
+                    std::string nombre =
+                        materiasView.obtenerNombreEditar();
 
 
-                    if(materiasController.actualizarMateria(idMateria,nombre))
+                    if(materiasController.actualizarMateria(
+                        idMateria,
+                        nombre))
                     {
                         cargarMaterias();
 
@@ -735,7 +1203,9 @@ else
                 // CANCELAR EDITAR
                 //-------------------------------------------------
 
-                if(materiasView.botonCancelarEditarPresionado(window, *event))
+                if(materiasView.botonCancelarEditarPresionado(
+                    window,
+                    *event))
                 {
                     materiasView.limpiarEditarMateria();
 
@@ -747,7 +1217,9 @@ else
                 // ELIMINAR
                 //-------------------------------------------------
 
-                if(materiasView.botonEliminarPresionado(window,*event))
+                if(materiasView.botonEliminarPresionado(
+                    window,
+                    *event))
                 {
                     // Solo abre confirmacion.
                 }
@@ -757,12 +1229,16 @@ else
                 // CONFIRMAR ELIMINAR
                 //-------------------------------------------------
 
-                if(materiasView.botonConfirmarEliminarPresionado(window,*event))
+                if(materiasView.botonConfirmarEliminarPresionado(
+                    window,
+                    *event))
                 {
-                    int idMateria = materiasView.obtenerIdMateriaSeleccionada();
+                    int idMateria =
+                        materiasView.obtenerIdMateriaSeleccionada();
 
 
-                    if(materiasController.eliminarMateria(idMateria))
+                    if(materiasController.eliminarMateria(
+                        idMateria))
                     {
                         cargarMaterias();
 
@@ -775,7 +1251,9 @@ else
                 // CANCELAR ELIMINAR
                 //-------------------------------------------------
 
-                if(materiasView.botonCancelarEliminarPresionado( window,*event))
+                if(materiasView.botonCancelarEliminarPresionado(
+                    window,
+                    *event))
                 {
                     materiasView.cerrarFormularios();
                 }
@@ -785,35 +1263,109 @@ else
                 // VER ALUMNOS
                 //-------------------------------------------------
 
-                if(materiasView.botonAlumnosPresionado(window,*event))
+                if(materiasView.botonAlumnosPresionado(
+                    window,
+                    *event))
                 {
-                    int idMateria = materiasView.obtenerIdMateriaSeleccionada();
+                    int idMateria =
+                        materiasView.obtenerIdMateriaSeleccionada();
 
 
-                    std::vector< MateriasController::AlumnoMateria>alumnosController 
-                        = materiasController.obtenerAlumnosMateria(idMateria);
+                    std::vector<
+                        MateriasController::AlumnoMateria
+                    > alumnosController =
+                        materiasController.obtenerAlumnosMateria(
+                            idMateria
+                        );
 
 
-                    std::vector<MateriasView::AlumnoMateria> alumnosView;
+                    std::vector<
+                        MateriasView::AlumnoMateria
+                    > alumnosView;
 
 
                     for(const auto& alumno : alumnosController)
                     {
                         MateriasView::AlumnoMateria alumnoView;
 
-                        alumnoView.id = alumno.id;
+                        alumnoView.id =
+                            alumno.id;
 
-                        alumnoView.nombre = alumno.nombre;
+                        alumnoView.nombre =
+                            alumno.nombre;
 
-                        alumnoView.identificador = alumno.identificador;
+                        alumnoView.identificador =
+                            alumno.identificador;
 
-                        alumnosView.push_back(alumnoView);
-
+                        alumnosView.push_back(
+                            alumnoView
+                        );
                     }
 
 
-                    materiasView.setAlumnosMateria(alumnosView);
-                
+                    materiasView.setAlumnosMateria(
+                        alumnosView
+                    );
+                }
+
+
+                //-------------------------------------------------
+                // VER CALIFICACIONES ALUMNOS
+                //-------------------------------------------------
+
+                if(materiasView.botonCalificacionesAlumnosPresionado(
+                    window,
+                    *event))
+                {
+                    int idMateria =
+                        materiasView.obtenerIdMateriaSeleccionada();
+
+
+                    if(idMateria != -1)
+                    {
+                        std::vector<
+                            MateriasController::AlumnoMateria
+                        > alumnosController =
+                            materiasController.obtenerAlumnosMateria(
+                                idMateria
+                            );
+
+
+                        std::vector<
+                            MateriasView::CalificacionAlumno
+                        > calificacionesView;
+
+
+                        for(const auto& alumno :
+                            alumnosController)
+                        {
+                            MateriasView::CalificacionAlumno dato;
+
+                            dato.idAlumno =
+                                alumno.id;
+
+                            dato.nombre =
+                                alumno.nombre;
+
+                            dato.identificador =
+                                alumno.identificador;
+
+                            dato.calificacion =
+                                0.0;
+
+                            dato.tieneCalificacion =
+                                false;
+
+                            calificacionesView.push_back(
+                                dato
+                            );
+                        }
+
+
+                        materiasView.setCalificacionesAlumnos(
+                            calificacionesView
+                        );
+                    }
                 }
 
 
@@ -821,16 +1373,23 @@ else
                 // INSCRIBIR
                 //-------------------------------------------------
 
-                if(materiasView.botonInscribirPresionado(window,*event))
+                if(materiasView.botonInscribirPresionado(
+                    window,
+                    *event))
                 {
-                    int idMateria = materiasView.obtenerIdMateriaSeleccionada();
+                    int idMateria =
+                        materiasView.obtenerIdMateriaSeleccionada();
 
-                    std::string boletas = materiasView.obtenerBoletasAlumno();
+                    std::string boletas =
+                        materiasView.obtenerBoletasAlumno();
 
 
-                    if( idMateria != -1 && !boletas.empty())
+                    if(idMateria != -1 &&
+                       !boletas.empty())
                     {
-                        if(materiasController.inscribirAlumno(idMateria,boletas))
+                        if(materiasController.inscribirAlumno(
+                            idMateria,
+                            boletas))
                         {
                             std::vector<
                                 MateriasController::AlumnoMateria
@@ -840,24 +1399,34 @@ else
                                 );
 
 
-                            std::vector<MateriasView::AlumnoMateria> alumnosView;
+                            std::vector<
+                                MateriasView::AlumnoMateria
+                            > alumnosView;
 
 
-                            for(const auto& alumno : alumnosController)
+                            for(const auto& alumno :
+                                alumnosController)
                             {
                                 MateriasView::AlumnoMateria alumnoView;
 
-                                alumnoView.id = alumno.id;
+                                alumnoView.id =
+                                    alumno.id;
 
-                                alumnoView.nombre = alumno.nombre;
+                                alumnoView.nombre =
+                                    alumno.nombre;
 
-                                alumnoView.identificador = alumno.identificador;
+                                alumnoView.identificador =
+                                    alumno.identificador;
 
-                                alumnosView.push_back( alumnoView );
+                                alumnosView.push_back(
+                                    alumnoView
+                                );
                             }
 
 
-                            materiasView.setAlumnosMateria(alumnosView);
+                            materiasView.setAlumnosMateria(
+                                alumnosView
+                            );
 
                             materiasView.limpiarBoletasAlumno();
 
@@ -882,10 +1451,8 @@ else
                         materiasView.obtenerBoletasSeleccionadas();
 
 
-                    if(
-                        idMateria != -1 &&
-                        !boletas.empty()
-                    )
+                    if(idMateria != -1 &&
+                       !boletas.empty())
                     {
                         if(materiasController.desinscribirAlumno(
                             idMateria,
@@ -940,156 +1507,193 @@ else
                 // PONDERACIONES
                 //-------------------------------------------------
 
-               if(materiasView.botonPonderacionesPresionado(window,*event))
+                if(materiasView.botonPonderacionesPresionado(
+                    window,
+                    *event))
                 {
-                    int idMateria = materiasView.obtenerIdMateriaSeleccionada();
+                    int idMateria =
+                        materiasView.obtenerIdMateriaSeleccionada();
+
 
                     if(idMateria != -1)
                     {
-                        cargarPonderaciones(idMateria);
+                        cargarPonderaciones(
+                            idMateria
+                        );
                     }
                 }
+
 
                 //-------------------------------------------------
                 // CARGAR PONDERACION
                 //-------------------------------------------------
 
-                if(materiasView.botonCargarPonderacionPresionado(window,*event))
+                if(materiasView.botonCargarPonderacionPresionado(
+                    window,
+                    *event))
                 {
-                    // La vista carga la ponderacion
-                    // seleccionada en sus campos.
+                    // La vista carga la ponderacion.
                 }
+
 
                 //-------------------------------------------------
                 // GUARDAR PONDERACION
                 //-------------------------------------------------
 
-                if(materiasView.botonGuardarPonderacionPresionado(window,*event))
+                if(materiasView.botonGuardarPonderacionPresionado(
+                    window,
+                    *event))
                 {
-                    int idMateria = materiasView.obtenerIdMateriaSeleccionada();
+                    int idMateria =
+                        materiasView.obtenerIdMateriaSeleccionada();
+
 
                     MateriasView::PonderacionMateria ponderacion;
 
-                    if(idMateria != -1 && materiasView.obtenerPonderacion(ponderacion))
+
+                    if(idMateria != -1 &&
+                       materiasView.obtenerPonderacion(
+                           ponderacion))
                     {
                         if(materiasController.configurarPonderacion(
-                               idMateria,
-                               ponderacion.parcial,
-                               ponderacion.tarea,
-                               ponderacion.examen,
-                               ponderacion.practica,
-                               ponderacion.proyecto,
-                               ponderacion.trabajo,
-                               ponderacion.otro))
+                            idMateria,
+                            ponderacion.parcial,
+                            ponderacion.tarea,
+                            ponderacion.examen,
+                            ponderacion.practica,
+                            ponderacion.proyecto,
+                            ponderacion.trabajo,
+                            ponderacion.otro))
                         {
-                            //-------------------------------------------------
-                            // Recargar ponderaciones
-                            //-------------------------------------------------
+                            cargarPonderaciones(
+                                idMateria
+                            );
 
-                            cargarPonderaciones(idMateria);
-
-                            //-------------------------------------------------
-                            // Cerrar ventana
-                            //-------------------------------------------------
-
-                           materiasView.cerrarFormularios();
+                            materiasView.cerrarFormularios();
                         }
                     }
                 }
-            
+
+
                 //-------------------------------------------------
                 // ELIMINAR PONDERACION
                 //-------------------------------------------------
 
-                if(materiasView.botonEliminarPonderacionPresionado(window,*event))
+                if(materiasView.botonEliminarPonderacionPresionado(
+                    window,
+                    *event))
                 {
-                    int idMateria = materiasView.obtenerIdMateriaSeleccionada();
+                    int idMateria =
+                        materiasView.obtenerIdMateriaSeleccionada();
 
-                   MateriasView::PonderacionMateria ponderacion;
 
-                   if(idMateria != -1 && materiasView.obtenerPonderacion(ponderacion))
-                   {
+                    MateriasView::PonderacionMateria ponderacion;
+
+
+                    if(idMateria != -1 &&
+                       materiasView.obtenerPonderacion(
+                           ponderacion))
+                    {
                         if(materiasController.eliminarPonderacion(
-                            idMateria,ponderacion.parcial))
+                            idMateria,
+                            ponderacion.parcial))
                         {
-                           //-------------------------------------------------
-                           // Recargar ponderaciones
-                           //-------------------------------------------------
+                            cargarPonderaciones(
+                                idMateria
+                            );
 
-                            cargarPonderaciones(idMateria);
-
-                           //-------------------------------------------------
-                           // Cerrar ventana
-                           //-------------------------------------------------
-
-                           materiasView.cerrarFormularios();
+                            materiasView.cerrarFormularios();
                         }
                     }
                 }
-                
+
+
                 //-------------------------------------------------
-                // CANCELAR PONDERACIONES
+                // CANCELAR PONDERACION
                 //-------------------------------------------------
 
-                if(materiasView.botonCancelarPonderacionPresionado(window,*event))
+                if(materiasView.botonCancelarPonderacionPresionado(
+                    window,
+                    *event))
                 {
                     materiasView.cerrarFormularios();
                 }
 
 
-                //------------------------------------------------
-                // Ver informción
-                //------------------------------------------------
+                //-------------------------------------------------
+                // INFORMACION
+                //-------------------------------------------------
 
-                if(materiasView.botonInformacionPresionado(window, *event))
+                if(materiasView.botonInformacionPresionado(
+                    window,
+                    *event))
                 {
-                    int idMateria = materiasView.obtenerIdMateriaSeleccionada();
+                    int idMateria =
+                        materiasView.obtenerIdMateriaSeleccionada();
+
 
                     if(idMateria != -1)
                     {
-                        cargarPonderaciones(idMateria);
+                        cargarPonderaciones(
+                            idMateria
+                        );
                     }
                 }
 
-                //------------------------------------------------
-                // Ver calificación final
-                //------------------------------------------------
 
-                if(materiasView.botonCalificacionFinalPresionado(window, *event))
+                //-------------------------------------------------
+                // CALIFICACION FINAL
+                //-------------------------------------------------
+
+                if(materiasView.botonCalificacionFinalPresionado(
+                    window,
+                    *event))
                 {
-                    int idMateria = materiasView.obtenerIdMateriaSeleccionada();
+                    int idMateria =
+                        materiasView.obtenerIdMateriaSeleccionada();
 
                     int idAlumno;
 
+
                     if(idMateria != -1 &&
-                        tareasController.obtenerIdAlumnoActual(idAlumno))
+                       tareasController.obtenerIdAlumnoActual(
+                           idAlumno))
                     {
-                        
                         double calificacionFinal;
 
+
                         if(materiasController.obtenerCalificacionFinal(
-                            idAlumno, idMateria,calificacionFinal))
+                            idAlumno,
+                            idMateria,
+                            calificacionFinal))
                         {
-                            
-                            materiasView.setCalificacionFinal(calificacionFinal);
+                            materiasView.setCalificacionFinal(
+                                calificacionFinal
+                            );
                         }
                     }
                 }
 
-                //------------------------------------------------
-                // Cerrar ver información
-                //------------------------------------------------
 
-                if(materiasView.botonCerrarInformacionPresionado(window, *event))
+                //-------------------------------------------------
+                // CERRAR INFORMACION
+                //-------------------------------------------------
+
+                if(materiasView.botonCerrarInformacionPresionado(
+                    window,
+                    *event))
                 {
                     materiasView.cerrarFormularios();
                 }
-                
+
+
                 //-------------------------------------------------
                 // CERRAR ALUMNOS
                 //-------------------------------------------------
 
-                if(materiasView.botonCerrarAlumnosPresionado(window,*event))
+                if(materiasView.botonCerrarAlumnosPresionado(
+                    window,
+                    *event))
                 {
                     materiasView.cerrarFormularios();
                 }
@@ -1100,13 +1704,8 @@ else
             // TAREAS
             //-------------------------------------------------
 
-            else if(vistaActual ==
-                    VistaActual::TAREAS)
+            else if(vistaActual == VistaActual::TAREAS)
             {
-                //-------------------------------------------------
-                // Eventos internos de TareasView
-                //-------------------------------------------------
-
                 tareasView.manejarEvento(
                     *event,
                     window
@@ -1114,7 +1713,7 @@ else
 
 
                 //-------------------------------------------------
-                // REGRESAR AL DASHBOARD
+                // REGRESAR
                 //-------------------------------------------------
 
                 if(tareasView.regresarPresionado(
@@ -1131,19 +1730,12 @@ else
                 //-------------------------------------------------
                 // CAMBIAR MATERIA
                 //-------------------------------------------------
-                //
-                // Los botones < y > son manejados visualmente
-                // por TareasView.
-                //
-                // Aquí detectamos el cambio comparando la
-                // materia seleccionada.
-                //-------------------------------------------------
 
-                static int ultimaMateria =
-                    -1;
+                static int ultimaMateria = -1;
 
                 int materiaActual =
                     tareasView.obtenerMateriaSeleccionada();
+
 
                 if(materiaActual != ultimaMateria)
                 {
@@ -1196,12 +1788,11 @@ else
 
                     int parcial = 0;
 
+
                     try
                     {
                         parcial =
-                            std::stoi(
-                                parcialTexto
-                            );
+                            std::stoi(parcialTexto);
                     }
                     catch(...)
                     {
@@ -1250,9 +1841,10 @@ else
                         *event
                     );
 
+
                 if(idTareaEditar != -1)
                 {
-                    // El formulario ya fue abierto por la vista.
+                    // El formulario ya fue abierto.
                 }
 
 
@@ -1291,12 +1883,11 @@ else
 
                     int parcial = 0;
 
+
                     try
                     {
                         parcial =
-                            std::stoi(
-                                parcialTexto
-                            );
+                            std::stoi(parcialTexto);
                     }
                     catch(...)
                     {
@@ -1345,6 +1936,7 @@ else
                         *event
                     );
 
+
                 if(idTareaEliminar != -1)
                 {
                     // Solo abre confirmacion.
@@ -1389,59 +1981,92 @@ else
                 // VER ALUMNOS / ESTADOS
                 //-------------------------------------------------
 
-                int idTareaEstados = tareasView.alumnosPresionado(window,*event);
+                int idTareaEstados =
+                    tareasView.alumnosPresionado(
+                        window,
+                        *event
+                    );
+
 
                 if(idTareaEstados != -1)
                 {
-                    //-------------------------------------------------
-                    // Obtener alumnos inscritos en la materia
-                    //-------------------------------------------------
+                    int idMateria =
+                        tareasView.obtenerMateriaSeleccionada();
 
-                    int idMateria = tareasView.obtenerMateriaSeleccionada();
 
-                    std::vector<MateriasController::AlumnoMateria> alumnosMateria =
-                        materiasController.obtenerAlumnosMateria(idMateria);
+                    std::vector<
+                        MateriasController::AlumnoMateria
+                    > alumnosMateria =
+                        materiasController.obtenerAlumnosMateria(
+                            idMateria
+                        );
 
-                    std::vector<TareasView::AlumnoTarea> alumnosTarea;
 
-                    for(const auto& alumno : alumnosMateria)
+                    std::vector<
+                        TareasView::AlumnoTarea
+                    > alumnosTarea;
+
+
+                    for(const auto& alumno :
+                        alumnosMateria)
                     {
                         TareasView::AlumnoTarea dato;
 
-                        dato.id = alumno.id;
+                        dato.id =
+                            alumno.id;
 
-                        dato.nombre = alumno.nombre;
+                        dato.nombre =
+                            alumno.nombre;
 
-                        dato.identificador = alumno.identificador;
+                        dato.identificador =
+                            alumno.identificador;
 
-                        alumnosTarea.push_back(dato);
+                        alumnosTarea.push_back(
+                            dato
+                        );
                     }
 
-                    tareasView.setAlumnosTarea(alumnosTarea);
+
+                    tareasView.setAlumnosTarea(
+                        alumnosTarea
+                    );
+
 
                     //-------------------------------------------------
-                    // Obtener estados de los alumnos
+                    // Estados
                     //-------------------------------------------------
 
-                    if(tareasController.cargarEstadosTarea(idTareaEstados))
+                    if(tareasController.cargarEstadosTarea(
+                        idTareaEstados))
                     {
-                        const auto estados = tareasController.obtenerEstadosTarea();
+                        const auto estados =
+                            tareasController.obtenerEstadosTarea();
 
-                        tareasView.setEstadosTarea(estados);
+
+                        tareasView.setEstadosTarea(
+                            estados
+                        );
+
 
                         //-------------------------------------------------
-                        // Obtener IDs de alumnos
+                        // IDs alumnos
                         //-------------------------------------------------
 
                         idsAlumnosTarea.clear();
 
-                        for(const auto& estado : estados)
+
+                        for(const auto& estado :
+                            estados)
                         {
-                            int idAlumno = estado.getAlumnoId();
+                            int idAlumno =
+                                estado.getAlumnoId();
+
 
                             bool existe = false;
 
-                            for(int id : idsAlumnosTarea)
+
+                            for(int id :
+                                idsAlumnosTarea)
                             {
                                 if(id == idAlumno)
                                 {
@@ -1450,34 +2075,46 @@ else
                                 }
                             }
 
+
                             if(!existe)
                             {
-                                idsAlumnosTarea.push_back(idAlumno);
+                                idsAlumnosTarea.push_back(
+                                    idAlumno
+                                );
                             }
                         }
 
+
                         //-------------------------------------------------
-                        // Cargar calificaciones
+                        // Calificaciones
                         //-------------------------------------------------
 
                         tareasController.cargarCalificacionesTarea(
-                            idTareaEstados,idsAlumnosTarea);
+                            idTareaEstados,
+                            idsAlumnosTarea
+                        );
+
 
                         tareasView.setCalificaciones(
-                            tareasController.obtenerCalificaciones());
+                            tareasController.obtenerCalificaciones()
+                        );
                     }
                     else
                     {
                         tareasView.limpiarEstados();
+
                         tareasView.limpiarCalificaciones();
                     }
                 }
 
+
                 //-------------------------------------------------
-                // CERRAR VENTANA DE ESTADOS
+                // CERRAR ESTADOS
                 //-------------------------------------------------
 
-                if(tareasView.cerrarEstadosPresionado(window,*event))
+                if(tareasView.cerrarEstadosPresionado(
+                    window,
+                    *event))
                 {
                     tareasView.limpiarEstados();
 
@@ -1490,10 +2127,15 @@ else
 
 
                 //-------------------------------------------------
-                // COMPLETAR TAREA
+                // COMPLETAR
                 //-------------------------------------------------
 
-                int idTareaCompletar = tareasView.completarPresionado(window,*event);
+                int idTareaCompletar =
+                    tareasView.completarPresionado(
+                        window,
+                        *event
+                    );
+
 
                 if(idTareaCompletar != -1)
                 {
@@ -1507,7 +2149,7 @@ else
 
 
                 //-------------------------------------------------
-                // NO COMPLETAR TAREA
+                // NO COMPLETAR
                 //-------------------------------------------------
 
                 int idTareaNoCompletar =
@@ -1515,6 +2157,7 @@ else
                         window,
                         *event
                     );
+
 
                 if(idTareaNoCompletar != -1)
                 {
@@ -1531,14 +2174,16 @@ else
                 // AGREGAR CALIFICACION
                 //-------------------------------------------------
 
-                int alumnoAgregarCalificacion = tareasView.agregarCalificacionPresionado(
-                        window, *event);
+                int alumnoAgregarCalificacion =
+                    tareasView.agregarCalificacionPresionado(
+                        window,
+                        *event
+                    );
+
 
                 if(alumnoAgregarCalificacion != -1)
                 {
                     // La vista abre el formulario.
-                    // El ID del alumno queda guardado
-                    // dentro de TareasView.
                 }
 
 
@@ -1546,9 +2191,12 @@ else
                 // GUARDAR CALIFICACION
                 //-------------------------------------------------
 
-                if(tareasView.guardarAgregarCalificacionPresionado(window,*event))
+                if(tareasView.guardarAgregarCalificacionPresionado(
+                    window,
+                    *event))
                 {
-                    int idAlumno = tareasView.obtenerAlumnoCalificacion();
+                    int idAlumno =
+                        tareasView.obtenerAlumnoCalificacion();
 
                     int idTarea =
                         tareasView.obtenerTareaCalificacion();
@@ -1559,12 +2207,11 @@ else
 
                     double calificacion = 0.0;
 
+
                     try
                     {
                         calificacion =
-                            std::stod(
-                                textoCalificacion
-                            );
+                            std::stod(textoCalificacion);
                     }
                     catch(...)
                     {
@@ -1572,21 +2219,15 @@ else
                     }
 
 
-                    if(
-                        idAlumno != -1 &&
-                        idTarea != -1 &&
-                        calificacion >= 0.0
-                    )
+                    if(idAlumno != -1 &&
+                       idTarea != -1 &&
+                       calificacion >= 0.0)
                     {
                         if(tareasController.agregarCalificacion(
                             idAlumno,
                             idTarea,
                             calificacion))
                         {
-                            //-------------------------------------------------
-                            // Recargar calificacion de la tarea
-                            //-------------------------------------------------
-
                             tareasController.cargarCalificacionesTarea(
                                 idTarea,
                                 idsAlumnosTarea
@@ -1599,8 +2240,6 @@ else
 
 
                             tareasView.limpiarCalificacion();
-
-                            
                         }
                     }
                 }
@@ -1615,7 +2254,6 @@ else
                     *event))
                 {
                     tareasView.limpiarCalificacion();
-
                 }
 
 
@@ -1623,8 +2261,12 @@ else
                 // EDITAR CALIFICACION
                 //-------------------------------------------------
 
-                int alumnoEditarCalificacion = tareasView.editarCalificacionPresionado(
-                        window,*event);
+                int alumnoEditarCalificacion =
+                    tareasView.editarCalificacionPresionado(
+                        window,
+                        *event
+                    );
+
 
                 if(alumnoEditarCalificacion != -1)
                 {
@@ -1636,21 +2278,27 @@ else
                 // GUARDAR EDITAR CALIFICACION
                 //-------------------------------------------------
 
-                if(tareasView.guardarEditarCalificacionPresionado(window,*event))
+                if(tareasView.guardarEditarCalificacionPresionado(
+                    window,
+                    *event))
                 {
-                    int idAlumno = tareasView.obtenerAlumnoCalificacionEditar();
+                    int idAlumno =
+                        tareasView.obtenerAlumnoCalificacionEditar();
 
-                    int idTarea = tareasView.obtenerTareaCalificacionEditar();
+                    int idTarea =
+                        tareasView.obtenerTareaCalificacionEditar();
 
-                    std::string textoCalificacion = tareasView.obtenerCalificacionEditar();
+                    std::string textoCalificacion =
+                        tareasView.obtenerCalificacionEditar();
 
 
                     double calificacion = 0.0;
 
+
                     try
                     {
-                        calificacion = std::stod(textoCalificacion);
-
+                        calificacion =
+                            std::stod(textoCalificacion);
                     }
                     catch(...)
                     {
@@ -1658,32 +2306,27 @@ else
                     }
 
 
-                    if(
-                        idAlumno != -1 &&
-                        idTarea != -1 &&
-                        calificacion >= 0.0
-                    )
+                    if(idAlumno != -1 &&
+                       idTarea != -1 &&
+                       calificacion >= 0.0)
                     {
                         if(tareasController.editarCalificacion(
                             idAlumno,
                             idTarea,
                             calificacion))
                         {
-                            //-------------------------------------------------
-                            // Recargar calificaciones
-                            //-------------------------------------------------
-
                             tareasController.cargarCalificacionesTarea(
-                                idTarea,idsAlumnosTarea);
+                                idTarea,
+                                idsAlumnosTarea
+                            );
 
 
                             tareasView.setCalificaciones(
-                                tareasController.obtenerCalificaciones());
+                                tareasController.obtenerCalificaciones()
+                            );
 
 
                             tareasView.limpiarCalificacion();
-
-                            
                         }
                     }
                 }
@@ -1698,7 +2341,6 @@ else
                     *event))
                 {
                     tareasView.limpiarCalificacion();
-
                 }
 
 
@@ -1707,7 +2349,11 @@ else
                 //-------------------------------------------------
 
                 int alumnoEliminarCalificacion =
-                    tareasView.eliminarCalificacionPresionado(window,*event);
+                    tareasView.eliminarCalificacionPresionado(
+                        window,
+                        *event
+                    );
+
 
                 if(alumnoEliminarCalificacion != -1)
                 {
@@ -1719,28 +2365,36 @@ else
                 // CONFIRMAR ELIMINAR CALIFICACION
                 //-------------------------------------------------
 
-                if(tareasView.confirmarEliminarCalificacionPresionado(window,*event))
+                if(tareasView.confirmarEliminarCalificacionPresionado(
+                    window,
+                    *event))
                 {
-                    int idAlumno = tareasView.obtenerAlumnoCalificacionEliminar();
+                    int idAlumno =
+                        tareasView.obtenerAlumnoCalificacionEliminar();
 
-                    int idTarea = tareasView.obtenerTareaCalificacionEliminar();
+                    int idTarea =
+                        tareasView.obtenerTareaCalificacionEliminar();
 
 
-                    if(idAlumno != -1 && idTarea != -1)
+                    if(idAlumno != -1 &&
+                       idTarea != -1)
                     {
-                        if(tareasController.eliminarCalificacion(idAlumno,idTarea))
+                        if(tareasController.eliminarCalificacion(
+                            idAlumno,
+                            idTarea))
                         {
                             tareasController.cargarCalificacionesTarea(
-                                idTarea,idsAlumnosTarea);
+                                idTarea,
+                                idsAlumnosTarea
+                            );
 
 
                             tareasView.setCalificaciones(
-                                tareasController.obtenerCalificaciones());
+                                tareasController.obtenerCalificaciones()
+                            );
 
 
                             tareasView.limpiarCalificacion();
-
-                            
                         }
                     }
                 }
@@ -1755,7 +2409,220 @@ else
                     *event))
                 {
                     tareasView.limpiarCalificacion();
+                }
+            }
 
+
+            //-------------------------------------------------
+            // PLANNER
+            //-------------------------------------------------
+
+            else if(vistaActual == VistaActual::PLANNER)
+            {
+                plannerView.manejarEvento(
+                    *event,
+                    window
+                );
+
+
+                if(plannerView.regresarPresionado(
+                    *event,
+                    window))
+                {
+                    vistaActual =
+                        VistaActual::DASHBOARD;
+                }
+
+
+                const PlannerView::Accion accion =
+                    plannerView.obtenerAccion();
+
+
+                bool operacionCorrecta = false;
+
+
+                switch(accion.tipo)
+                {
+                    case PlannerView::TipoAccion::CAMBIAR_PRIORIDAD:
+
+                        operacionCorrecta =
+                            plannerController.cambiarPrioridadTarea(
+                                accion.idTarea,
+                                accion.prioridad
+                            );
+
+                        break;
+
+
+                    case PlannerView::TipoAccion::AGREGAR_SUBTAREA:
+
+                        operacionCorrecta =
+                            plannerController.agregarSubtarea(
+                                accion.idTarea,
+                                accion.descripcion
+                            );
+
+                        break;
+
+
+                    case PlannerView::TipoAccion::EDITAR_SUBTAREA:
+
+                        operacionCorrecta =
+                            plannerController.editarSubtarea(
+                                accion.idSubtarea,
+                                accion.descripcion
+                            );
+
+                        break;
+
+
+                    case PlannerView::TipoAccion::ELIMINAR_SUBTAREA:
+
+                        operacionCorrecta =
+                            plannerController.eliminarSubtarea(
+                                accion.idSubtarea
+                            );
+
+                        break;
+
+
+                    case PlannerView::TipoAccion::CAMBIAR_ESTADO_SUBTAREA:
+
+                        operacionCorrecta =
+                            plannerController.cambiarEstadoSubtarea(
+                                accion.idSubtarea,
+                                accion.estado
+                            );
+
+                        break;
+
+
+                    case PlannerView::TipoAccion::COLOCAR_SUBTAREA:
+
+                        operacionCorrecta =
+                            plannerController.agregarSubtareaPlanner(
+                                accion.idSubtarea,
+                                accion.fecha
+                            );
+
+                        break;
+
+
+                    case PlannerView::TipoAccion::QUITAR_SUBTAREA:
+
+                        operacionCorrecta =
+                            plannerController.eliminarSubtareaPlanner(
+                                accion.idSubtarea,
+                                accion.fecha
+                            );
+
+                        break;
+
+
+                    case PlannerView::TipoAccion::NINGUNA:
+
+                        break;
+                }
+
+
+                plannerView.limpiarAccion();
+
+
+                if(operacionCorrecta)
+                {
+                    cargarPlanner();
+                }
+            }
+
+
+            //-------------------------------------------------
+            // NOTIFICACIONES
+            //-------------------------------------------------
+
+            else if(vistaActual == VistaActual::NOTIFICACIONES)
+            {
+                notificacionesView.manejarEvento(
+                    *event,
+                    window
+                );
+
+
+                //-------------------------------------------------
+                // REGRESAR
+                //-------------------------------------------------
+
+                if(notificacionesView.botonRegresarPresionado(
+                    window,
+                    *event))
+                {
+                    vistaActual =
+                        VistaActual::DASHBOARD;
+                }
+
+
+                //-------------------------------------------------
+                // MARCAR COMO LEIDA
+                //-------------------------------------------------
+
+                int indiceLeer = -1;
+
+
+                if(notificacionesView.botonMarcarLeidaPresionado(
+                    window,
+                    *event,
+                    indiceLeer))
+                {
+                    const auto& notificaciones =
+                        notificacionesView.obtenerNotificaciones();
+
+
+                    if(indiceLeer >= 0 &&
+                       indiceLeer <
+                       static_cast<int>(notificaciones.size()))
+                    {
+                        int idNotificacion =
+                            notificaciones[indiceLeer].getId();
+
+
+                        if(notificacionesController.marcarComoLeida(
+                            idNotificacion))
+                        {
+                            cargarNotificaciones();
+                        }
+                    }
+                }
+
+
+                //-------------------------------------------------
+                // ELIMINAR
+                //-------------------------------------------------
+
+                int indiceEliminar = -1;
+
+
+                if(notificacionesView.botonEliminarPresionado(
+                    window,
+                    *event,
+                    indiceEliminar))
+                {
+                    const auto& notificaciones =
+                        notificacionesView.obtenerNotificaciones();
+
+
+                    if(indiceEliminar >= 0 &&
+                       indiceEliminar <
+                       static_cast<int>(notificaciones.size()))
+                    {
+                        int idNotificacion =
+                            notificaciones[indiceEliminar].getId();
+
+
+                        if(notificacionesController.eliminarNotificacion(
+                            idNotificacion))
+                        {
+                            cargarNotificaciones();
+                        }
+                    }
                 }
             }
         }
@@ -1774,10 +2641,21 @@ else
         // LOGIN
         //-------------------------------------------------
 
-        if(vistaActual ==
-            VistaActual::LOGIN)
+        if(vistaActual == VistaActual::LOGIN)
         {
             login.draw(
+                window
+            );
+        }
+
+
+        //-------------------------------------------------
+        // USUARIOS
+        //-------------------------------------------------
+
+        else if(vistaActual == VistaActual::USUARIOS)
+        {
+            usuariosView.draw(
                 window
             );
         }
@@ -1787,8 +2665,7 @@ else
         // DASHBOARD
         //-------------------------------------------------
 
-        else if(vistaActual ==
-            VistaActual::DASHBOARD)
+        else if(vistaActual == VistaActual::DASHBOARD)
         {
             dashboard.draw(
                 window
@@ -1800,8 +2677,7 @@ else
         // MATERIAS
         //-------------------------------------------------
 
-        else if(vistaActual ==
-            VistaActual::MATERIAS)
+        else if(vistaActual == VistaActual::MATERIAS)
         {
             materiasView.draw(
                 window
@@ -1813,10 +2689,33 @@ else
         // TAREAS
         //-------------------------------------------------
 
-        else if(vistaActual ==
-            VistaActual::TAREAS)
+        else if(vistaActual == VistaActual::TAREAS)
         {
             tareasView.draw(
+                window
+            );
+        }
+
+
+        //-------------------------------------------------
+        // PLANNER
+        //-------------------------------------------------
+
+        else if(vistaActual == VistaActual::PLANNER)
+        {
+            plannerView.draw(
+                window
+            );
+        }
+
+
+        //-------------------------------------------------
+        // NOTIFICACIONES
+        //-------------------------------------------------
+
+        else if(vistaActual == VistaActual::NOTIFICACIONES)
+        {
+            notificacionesView.draw(
                 window
             );
         }

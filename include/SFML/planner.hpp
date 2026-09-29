@@ -1,4 +1,4 @@
-#ifndef PLANNER_VIEW_HPP
+/*#ifndef PLANNER_VIEW_HPP
 #define PLANNER_VIEW_HPP
 
 #include <SFML/Graphics.hpp>
@@ -26,4 +26,4 @@ public:
     );
 };
 
-#endif
+#endif*/

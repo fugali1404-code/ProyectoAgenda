@@ -15,7 +15,9 @@ enum class VistaActual
 
     CALIFICACIONES,
 
-    NOTIFICACIONES
+    NOTIFICACIONES, 
+
+    USUARIOS
 };
 
 #endif

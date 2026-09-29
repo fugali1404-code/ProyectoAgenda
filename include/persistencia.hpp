@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "materia.hpp"
 #include "tarea.hpp"
@@ -17,6 +18,8 @@
 #include "ponderacion.hpp"
 #include "calificaciones.hpp"
 
+using namespace std;
+
 class Persistencia
 {
 public:
@@ -26,20 +29,20 @@ public:
     ///////////////////////////////////////
 
     static bool guardarTareas(
-        const std::vector<Tarea>& tareas,
-        const std::string& archivo = "tareas.txt"
+        const vector<Tarea>& tareas,
+        const string& archivo = "tareas.txt"
     );
 
     static bool cargarTareas(
-        std::vector<Tarea>& tareas,
-        const std::string& archivo = "tareas.txt"
+        vector<Tarea>& tareas,
+        const string& archivo = "tareas.txt"
     );
 
     static int generarIdTarea(
-        const std::string& archivo = "tareas.txt"
+        const string& archivo = "tareas.txt"
     );
 
-    static std::string tipoTareaAString(
+    static string tipoTareaAString(
         TipoTarea tipo      
     );
 
@@ -49,13 +52,13 @@ public:
     ///////////////////////////////////////////////////////////
 
     static bool guardarPonderaciones(
-        const std::vector<Ponderacion>& ponderaciones,
-        const std::string& archivo
+        const vector<Ponderacion>& ponderaciones,
+        const string& archivo
     );
 
     static bool cargarPonderaciones(
-        std::vector<Ponderacion>& ponderaciones,
-        const std::string& archivo
+        vector<Ponderacion>& ponderaciones,
+        const string& archivo
     );
 
 
@@ -65,17 +68,17 @@ public:
 
     static bool guardarMaterias(
         int profesorId,
-        const std::vector<Materia>& materias,
-        const std::string& archivo = "materias.txt"
+        const vector<Materia>& materias,
+        const string& archivo = "materias.txt"
     );
 
     static bool cargarMaterias(
-        std::vector<Materia>& materias,
-        const std::string& archivo = "materias.txt"
+        vector<Materia>& materias,
+        const string& archivo = "materias.txt"
     );
 
     static int generarIdMateria(
-        const std::string& archivo
+        const string& archivo
     );
 
     ///////////////////////////////////////////////////////////
@@ -83,13 +86,13 @@ public:
     ///////////////////////////////////////////////////////////
 
     static bool guardarCalificaciones(
-        const std::vector<Calificacion>& calificaciones,
-        const std::string& archivo = "calificaciones.txt"
+        const vector<Calificacion>& calificaciones,
+        const string& archivo = "calificaciones.txt"
     );
 
     static bool cargarCalificaciones(
-        std::vector<Calificacion>& calificaciones,
-        const std::string& archivo = "calificaciones.txt"
+        vector<Calificacion>& calificaciones,
+        const string& archivo = "calificaciones.txt"
     );
 
     ///////////////////////////////////////////////////////////
@@ -97,38 +100,38 @@ public:
     ///////////////////////////////////////////////////////////
 
     static bool guardarUsuarios(
-        const std::vector<Usuario*>& usuarios,
-        const std::string& archivo = "usuarios.txt"
+        const vector<Usuario*>& usuarios,
+        const string& archivo = "usuarios.txt"
     );
 
     static bool cargarUsuarios(
-        std::vector<Usuario*>& usuarios,
-        const std::string& archivo = "usuarios.txt"
+        vector<Usuario*>& usuarios,
+        const string& archivo = "usuarios.txt"
     );
 
 
     static Usuario* autenticarUsuario(
-    const std::string& correo,
-    const std::string& password,
-    const std::string& archivo = "usuarios.txt"
+        const string& correo,
+        const string& password,
+        const string& archivo = "usuarios.txt"
     );
 
 
     static bool agregarUsuario(
         const Usuario& usuario,
-        const std::string& archivo = "usuarios.txt"
+        const string& archivo = "usuarios.txt"
     );
 
     static bool actualizarUsuario(
         const Usuario& usuario,
-        const std::string& archivo = "usuarios.txt");
+        const string& archivo = "usuarios.txt");
 
     static bool eliminarUsuario(
         int idUsuario,
-        const std::string& archivo = "usuarios.txt");
+        const string& archivo = "usuarios.txt");
 
     static int generarIdUsuario(
-        const std::string& archivo = "usuarios.txt");
+        const string& archivo = "usuarios.txt");
 
     
     ///////////////////////////////////////////////////////////
@@ -136,17 +139,17 @@ public:
     ///////////////////////////////////////////////////////////
 
     static bool guardarSubtareas(
-        const std::vector<Subtarea>& subtareas,
-        const std::string& archivo = "subtareas.txt"
+        const vector<Subtarea>& subtareas,
+        const string& archivo = "subtareas.txt"
     );
 
     static bool cargarSubtareas(
-        std::vector<Subtarea>& subtareas,
-        const std::string& archivo = "subtareas.txt"
+        vector<Subtarea>& subtareas,
+        const string& archivo = "subtareas.txt"
     );
 
     static int generarIdSubtarea(
-        const std::string& archivo = "subtareas.txt"
+        const string& archivo = "subtareas.txt"
     );
         
     ///////////////////////////////////////////////////////////
@@ -156,16 +159,16 @@ public:
     static bool guardarPlanner(
         int alumnoId,
         const PlannerSemana& planner,
-        const std::string& archivo = "planner.txt"
+        const string& archivo = "planner.txt"
     );
 
     static bool cargarPlanner(
         int alumnoId,
         PlannerSemana& planner,
-        const std::string& archivo = "planner.txt"
+        const string& archivo = "planner.txt"
     );
 
-    static std::string prioridadPlannerAString(
+    static string prioridadPlannerAString(
         PrioridadPlanner prioridad
     );
 
@@ -174,16 +177,16 @@ public:
     ///////////////////////////////////////////////////////////
 
     static bool guardarEstadosTareas(
-        const std::vector<EstadoTareaAlumno>& estados,
-        const std::string& archivo = "estadosTareas.txt"
+        const vector<EstadoTareaAlumno>& estados,
+        const string& archivo = "estadosTareas.txt"
     );
 
     static bool cargarEstadosTareas(
-        std::vector<EstadoTareaAlumno>& estados,
-        const std::string& archivo = "estadosTareas.txt"
+        vector<EstadoTareaAlumno>& estados,
+        const string& archivo = "estadosTareas.txt"
     );
 
-    static std::string estadoTareaAString(
+    static string estadoTareaAString(
         EstadoTarea estado
     );
 
@@ -193,24 +196,24 @@ public:
     ///////////////////////////////////////////////////////////
 
     static bool guardarNotificaciones(
-        const std::vector<Notificacion>& notificaciones,
-        const std::string& archivo
+        const vector<Notificacion>& notificaciones,
+        const string& archivo
     );
 
     static bool cargarNotificaciones(
-        std::vector<Notificacion>& notificaciones,
-        const std::string& archivo
+        vector<Notificacion>& notificaciones,
+        const string& archivo
     );
 
     static int generarIdNotificacion(
-        const std::string& archivo
+        const string& archivo
     );
 
-    static std::string tipoNotificacionAString(
+    static string tipoNotificacionAString(
         TipoNotificacion tipo
     );
 
-    static std::string tipoReferenciaNotificacionAString(
+    static string tipoReferenciaNotificacionAString(
         TipoReferenciaNotificacion tipo
     );
 
@@ -224,19 +227,19 @@ public:
     //==============================
 
     static TipoTarea stringATipoTarea(
-        const std::string& texto
+        const string& texto
     );
 
     //=================================
     // Conversión de estado de subtarea
     //==================================
 
-    static std::string estadoSubtareaAString(
+    static string estadoSubtareaAString(
         EstadoSubtarea estado
     );
 
     static EstadoSubtarea stringAEstadoSubtarea(
-        const std::string& texto
+        const string& texto
     );
 
     //=================================
@@ -244,7 +247,7 @@ public:
     //=================================
 
     static PrioridadPlanner stringAPrioridadPlanner(
-        const std::string& texto
+        const string& texto
     );
 
     //====================================
@@ -252,7 +255,7 @@ public:
     //====================================
 
     static EstadoTarea stringAEstadoTarea(
-        const std::string& estado
+        const string& estado
     );
     
     //==================================
@@ -260,11 +263,11 @@ public:
     //==================================ç
 
     static TipoNotificacion stringATipoNotificacion(
-        const std::string& texto
+        const string& texto
     );
 
     static TipoReferenciaNotificacion stringATipoReferenciaNotificacion(
-        const std::string& texto
+        const string& texto
     );
     
 

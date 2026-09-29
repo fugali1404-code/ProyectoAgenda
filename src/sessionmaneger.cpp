@@ -22,46 +22,46 @@ namespace
 
     bool actualizarTareaEnPlannerArchivo(
         int idTarea,
-        const std::string& nuevaFecha,
-        const std::string& archivo
+        const string& nuevaFecha,
+        const string& archivo
     )
     {
-        std::ifstream entrada(archivo);
+        ifstream entrada(archivo);
 
         if(!entrada.is_open())
         {
             return true;
         }
 
-        std::vector<std::string> registros;
-        std::string linea;
+        vector<std::string> registros;
+        string linea;
 
         // Saltar encabezado
-        std::getline(entrada, linea);
+        getline(entrada, linea);
 
         bool modificada = false;
         bool tareaYaAgregada = false;
 
-        while(std::getline(entrada, linea))
+        while(getline(entrada, linea))
         {
             if(linea.empty())
             {
                 continue;
             }
 
-            std::stringstream ss(linea);
+            stringstream ss(linea);
 
-            std::string alumnoTexto;
-            std::string fecha;
-            std::string tipo;
-            std::string idElementoTexto;
-            std::string prioridad;
+            string alumnoTexto;
+            string fecha;
+            string tipo;
+            string idElementoTexto;
+            string prioridad;
 
-            std::getline(ss, alumnoTexto, '|');
-            std::getline(ss, fecha, '|');
-            std::getline(ss, tipo, '|');
-            std::getline(ss, idElementoTexto, '|');
-            std::getline(ss, prioridad, '|');
+            getline(ss, alumnoTexto, '|');
+            getline(ss, fecha, '|');
+            getline(ss, tipo, '|');
+            getline(ss, idElementoTexto, '|');
+            getline(ss, prioridad, '|');
 
             // Solo nos interesan registros TAREA
             if(tipo == "TAREA")
@@ -114,7 +114,7 @@ namespace
             return true;
         }
 
-        std::ofstream salida(archivo);
+        ofstream salida(archivo);
 
         if(!salida.is_open())
         {
@@ -128,7 +128,7 @@ namespace
             << "idElemento|"
             << "prioridad\n";
 
-        for(const std::string& registro : registros)
+        for(const string& registro : registros)
         {
             salida << registro << "\n";
         }
@@ -150,39 +150,39 @@ namespace
         const std::string& archivo
     )
     {
-        std::ifstream entrada(archivo);
+        ifstream entrada(archivo);
 
         if(!entrada.is_open())
         {
             return true;
         }
 
-        std::vector<std::string> registros;
-        std::string linea;
+        vector<std::string> registros;
+        string linea;
 
         // Saltar encabezado
-        std::getline(entrada, linea);
+        getline(entrada, linea);
 
-        while(std::getline(entrada, linea))
+        while(getline(entrada, linea))
         {
             if(linea.empty())
             {
                 continue;
             }
 
-            std::stringstream ss(linea);
+            stringstream ss(linea);
 
-            std::string alumnoTexto;
-            std::string fecha;
-            std::string tipo;
-            std::string idElementoTexto;
-            std::string prioridad;
+            string alumnoTexto;
+            string fecha;
+            string tipo;
+            string idElementoTexto;
+            string prioridad;
 
-            std::getline(ss, alumnoTexto, '|');
-            std::getline(ss, fecha, '|');
-            std::getline(ss, tipo, '|');
-            std::getline(ss, idElementoTexto, '|');
-            std::getline(ss, prioridad, '|');
+            getline(ss, alumnoTexto, '|');
+            getline(ss, fecha, '|');
+            getline(ss, tipo, '|');
+            getline(ss, idElementoTexto, '|');
+            getline(ss, prioridad, '|');
 
             bool eliminar = false;
 
@@ -190,7 +190,7 @@ namespace
 
             try
             {
-                idElemento = std::stoi(idElementoTexto);
+                idElemento = stoi(idElementoTexto);
             }
             catch(...)
             {
@@ -235,7 +235,7 @@ namespace
 
         entrada.close();
 
-        std::ofstream salida(archivo);
+        ofstream salida(archivo);
 
         if(!salida.is_open())
         {
@@ -249,7 +249,7 @@ namespace
             << "idElemento|"
             << "prioridad\n";
 
-        for(const std::string& registro : registros)
+        for(const string& registro : registros)
         {
             salida << registro << "\n";
         }
@@ -266,7 +266,7 @@ namespace
     // Buscar el índice del día dentro de la semana
     int obtenerIndiceDia(
         const PlannerSemana& planner,
-        const std::string& fecha
+        const string& fecha
     )
     {
         for(int i = 0; i < 7; ++i)
@@ -282,8 +282,8 @@ namespace
 }
 //--------------------------------------
 
-std::string SessionManager::sumarDias(
-    const std::string& fecha,
+string SessionManager::sumarDias(
+    const string& fecha,
     int dias
 ) const
 {
@@ -298,32 +298,32 @@ std::string SessionManager::sumarDias(
 
     try
     {
-        anio = std::stoi(fecha.substr(0, 4));
-        mes  = std::stoi(fecha.substr(5, 2));
-        dia  = std::stoi(fecha.substr(8, 2));
+        anio = stoi(fecha.substr(0, 4));
+        mes  = stoi(fecha.substr(5, 2));
+        dia  = stoi(fecha.substr(8, 2));
     }
     catch(...)
     {
         return "";
     }
 
-    std::tm fechaTm = {};
+    tm fechaTm = {};
 
     fechaTm.tm_year = anio - 1900;
     fechaTm.tm_mon  = mes - 1;
     fechaTm.tm_mday = dia;
     fechaTm.tm_hour = 12;
 
-    std::time_t tiempo = std::mktime(&fechaTm);
+    time_t tiempo = mktime(&fechaTm);
 
     if(tiempo == -1)
     {
         return "";
     }
 
-    tiempo += static_cast<std::time_t>(dias) * 24 * 60 * 60;
+    tiempo += static_cast<time_t>(dias) * 24 * 60 * 60;
 
-    std::tm* resultado = std::localtime(&tiempo);
+    tm* resultado = localtime(&tiempo);
 
     if(resultado == nullptr)
     {
@@ -332,14 +332,14 @@ std::string SessionManager::sumarDias(
 
     char buffer[11];
 
-    std::strftime(
+    strftime(
         buffer,
         sizeof(buffer),
         "%Y-%m-%d",
         resultado
     );
 
-    return std::string(buffer);
+    return string(buffer);
 }
 
 
@@ -350,8 +350,8 @@ SessionManager::SessionManager()
 }
 
 bool SessionManager::login(
-    const std::string& correo,
-    const std::string& password
+    const string& correo,
+    const string& password
 )
 {
     Usuario* usuario = Persistencia::autenticarUsuario(correo,password,"usuarios.txt");
@@ -372,11 +372,11 @@ bool SessionManager::login(
     datos.setIdentificador(usuario->getIdentificador());
 
     // Materias
-    std::vector<Materia> todasLasMaterias;
+    vector<Materia> todasLasMaterias;
 
     Persistencia::cargarMaterias(todasLasMaterias,"materias.txt");
 
-    std::vector<Materia> materiasProfesor;
+    vector<Materia> materiasProfesor;
 
     for(const auto& materia : todasLasMaterias)
     {
@@ -409,17 +409,17 @@ bool SessionManager::estaAutenticado() const
     return datos.estaAutenticado();
 }
 
-std::string SessionManager::obtenerUsuario() const
+string SessionManager::obtenerUsuario() const
 {
     return datos.obtenerUsuario();
 }
 
-std::string SessionManager::obtenerNombreCompleto() const
+string SessionManager::obtenerNombreCompleto() const
 {
     return datos.obtenerNombreCompleto();
 }
 
-std::string SessionManager::obtenerIdentificador() const
+string SessionManager::obtenerIdentificador() const
 {
     return datos.obtenerIdentificador();
 }
@@ -1802,6 +1802,7 @@ bool SessionManager::obtenerCalificacionFinal(
         return false;
     }
 
+
     //=======================================================
     // UN SOLO LOCK PARA TODA LA OPERACION
     //=======================================================
@@ -2110,8 +2111,9 @@ bool SessionManager::obtenerCalificacionFinal(
         }
 
         calificacionFinal = resultado;
-
         return true;
+
+       
     }
 
     //=======================================================
@@ -2172,6 +2174,7 @@ bool SessionManager::obtenerCalificacionFinal(
     //=======================================================
     // TODOS LOS PARCIALES VALEN LO MISMO
     //=======================================================
+
 
     calificacionFinal = sumaParciales / parciales.size();
 
@@ -2336,6 +2339,8 @@ std::string SessionManager::obtenerUsuarios() const
         respuesta += usuarios[i]->getNombre();
         respuesta += ",";
         respuesta += usuarios[i]->getCorreo();
+        respuesta += ",";
+        respuesta += usuarios[i]->getIdentificador();
 
         if(i != usuarios.size()-1)
         {

@@ -26,11 +26,21 @@ public:
         std::string identificador;
     };
 
-
     //-------------------------------------------------
+    // Calificacion de un alumno
+    //-------------------------------------------------
+
+    struct CalificacionAlumno
+    {   
+        int idAlumno;
+        std::string nombre;
+        std::string identificador;
+        double calificacion;
+        bool tieneCalificacion;
+    };
+
+    
     // Constructor
-    //-------------------------------------------------
-
     MateriasView();
 
 
@@ -335,6 +345,30 @@ public:
 
     bool estaMostrandoAlumnos() const;
 
+    //-------------------------------------------------
+    // Calificaciones finales de alumnos
+    //-------------------------------------------------
+
+    bool botonCalificacionesAlumnosPresionado(
+        const sf::RenderWindow& window,
+        const sf::Event& event
+    );
+
+    bool botonCerrarCalificacionesAlumnosPresionado(
+        const sf::RenderWindow& window,
+        const sf::Event& event
+    );
+
+    bool estaMostrandoCalificacionesAlumnos() const;
+
+    void setCalificacionesAlumnos(
+        const std::vector<CalificacionAlumno>& lista
+    );
+
+    void limpiarCalificacionesAlumnos();
+
+    const std::vector<CalificacionAlumno>& obtenerCalificacionesAlumnos() const;
+
 
     //-------------------------------------------------
     // Limpiar estado
@@ -488,12 +522,11 @@ private:
 
     std::vector<AlumnoMateria> alumnosMateria;
 
-    //------------------------------------------------
-    //Calificacion final
-    //------------------------------------------------
+    //-------------------------------------------------
+    // Calificaciones finales de los alumnos
+    //-------------------------------------------------
 
-
-
+    std::vector<CalificacionAlumno> calificacionesAlumnos;
 
     //-------------------------------------------------
     // Scroll materias
@@ -581,6 +614,12 @@ private:
     bool mostrandoInformacion;
     double calificacionFinal;
     bool tieneCalificacionFinal;
+
+    //-------------------------------------------------
+    // Ventana de calificaciones del profesor
+    //-------------------------------------------------
+
+    bool mostrandoCalificacionesAlumnos;
 
     
 

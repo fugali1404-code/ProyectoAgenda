@@ -1702,7 +1702,7 @@ void TareasView::dibujarEncabezado(
     dibujarBoton(
         ventana,
         botonRegresar,
-        "Regresar al Dashboard",
+        "  Regresar ",
         encabezadoColor
 
     );

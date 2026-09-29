@@ -75,16 +75,21 @@ add_executable(
     # SFML
     src/SFML/login.cpp
     src/SFML/dashboard.cpp
-    src/SFML/planner.cpp
     src/SFML/textbox.cpp
     src/SFML/sessioncliente.cpp
     src/SFML/materiasView.cpp
     src/SFML/tareasView.cpp
+    src/SFML/plannerView.cpp
+    src/SFML/notificacionesView.cpp
+    src/SFML/usuariosView.cpp
 
     #Controladores
     src/controllers/loginController.cpp
     src/controllers/materiasController.cpp
     src/controllers/tareasController.cpp
+    src/controllers/plannerController.cpp
+    src/controllers/notificacionesController.cpp
+    src/controllers/usuariosController.cpp
 )
 
 # ==========================

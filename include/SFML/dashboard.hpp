@@ -10,58 +10,21 @@
 class DashboardView
 {
 private:
-
-    //-------------------------------------------------
-    // Fuente
-    //-------------------------------------------------
-
     sf::Font font;
-
-    //-------------------------------------------------
-    // Datos del usuario
-    //-------------------------------------------------
 
     std::string nombreAlumno;
     std::string boleta;
     std::string rol;
 
-    //-------------------------------------------------
-    // Materias
-    //-------------------------------------------------
-
     std::vector<Materia> Materias;
 
-    //-------------------------------------------------
-    // Scroll de materias
-    //-------------------------------------------------
-
     float desplazamientoMaterias;
-
-    //-------------------------------------------------
-    // Posición del scroll
-    //-------------------------------------------------
-
     float scrollMateriasAnterior;
 
 public:
-
-    //-------------------------------------------------
-    // Constructor
-    //-------------------------------------------------
-
     DashboardView();
 
-    //-------------------------------------------------
-    // Fuente
-    //-------------------------------------------------
-
-    bool cargarFuente(
-        const std::string& ruta
-    );
-
-    //-------------------------------------------------
-    // Datos del usuario
-    //-------------------------------------------------
+    bool cargarFuente(const std::string& ruta);
 
     void setAlumno(
         const std::string& nombre,
@@ -72,27 +35,34 @@ public:
         const std::string& rolUsuario
     );
 
-    //-------------------------------------------------
-    // Materias
-    //-------------------------------------------------
-
     void setMaterias(
         const std::vector<Materia>& lista
     );
 
     void limpiarMaterias();
 
-    //-------------------------------------------------
-    // Dibujar
-    //-------------------------------------------------
-
-    void draw(
-        sf::RenderWindow& window
+    // Botones del dashboard
+    bool botonMateriasPresionado(
+        const sf::RenderWindow& window,
+        const sf::Event& event
     );
 
-    //-------------------------------------------------
-    // Eventos
-    //-------------------------------------------------
+    bool botonTareasPresionado(
+        const sf::RenderWindow& window,
+        const sf::Event& event
+    );
+
+    bool botonPlannerPresionado(
+        const sf::RenderWindow& window,
+        const sf::Event& event
+    );
+
+    bool botonNotificacionesPresionado(
+        const sf::RenderWindow& window,
+        const sf::Event& event
+    );
+
+    void draw(sf::RenderWindow& window);
 
     void manejarEvento(
         const sf::Event& event,

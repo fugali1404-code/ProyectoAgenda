@@ -1,6 +1,7 @@
 #include "SFML/materiasView.hpp"
 #include <algorithm>
-
+#include <sstream>
+#include <iomanip>
 
 
 //////////////////////////////////////////////////////////////
@@ -20,6 +21,7 @@ static const sf::Color barraScroll(120, 120, 120);
 MateriasView::MateriasView()
 {
     rol = "";
+
     desplazamientoMaterias = 0.f;
     desplazamientoAlumnos = 0.f;
 
@@ -29,6 +31,7 @@ MateriasView::MateriasView()
 
     alumnosSeleccionados.clear();
     ponderaciones.clear();
+    calificacionesAlumnos.clear();
 
     mostrandoAgregar = false;
     mostrandoEditar = false;
@@ -36,6 +39,7 @@ MateriasView::MateriasView()
     mostrandoAlumnos = false;
     mostrandoPonderaciones = false;
     mostrandoInformacion = false;
+    mostrandoCalificacionesAlumnos = false;
 
     calificacionFinal = 0.0;
     tieneCalificacionFinal = false;
@@ -49,7 +53,6 @@ MateriasView::MateriasView()
     txtBoletasAlumno.setPosition(425.f,280.f);
     txtBoletasAlumno.setSize(430.f,40.f);
 
-    
 
     //-------------------------------------------------
     // TextBox de ponderaciones
@@ -237,15 +240,156 @@ void MateriasView::manejarEvento(
 
 
     //-------------------------------------------------
+    // CALIFICACIONES DE ALUMNOS
+    //-------------------------------------------------
+
+    if(mostrandoCalificacionesAlumnos)
+    {
+        //-------------------------------------------------
+        // Botón Cerrar
+        //-------------------------------------------------
+
+        if(botonCerrarCalificacionesAlumnosPresionado(
+            window,
+            event
+        ))
+        {
+            limpiarCalificacionesAlumnos();
+
+            return;
+        }
+
+        return;
+    }
+
+
+    //-------------------------------------------------
     // ALUMNOS
     //-------------------------------------------------
 
     if(mostrandoAlumnos)
     {
+        //-------------------------------------------------
+        // TextBox de boletas
+        //-------------------------------------------------
+
         txtBoletasAlumno.handleEvent(
             event,
             window
         );
+
+
+        //-------------------------------------------------
+        // Eventos de mouse
+        //-------------------------------------------------
+
+        if(const auto* clic =
+            event.getIf<sf::Event::MouseButtonPressed>())
+        {
+            if(clic->button == sf::Mouse::Button::Left)
+            {
+                sf::View vistaLogica(
+                    sf::FloatRect(
+                        {0.f, 0.f},
+                        {1280.f, 720.f}
+                    )
+                );
+
+                sf::Vector2f posicionMouse =
+                    window.mapPixelToCoords(
+                        {
+                            clic->position.x,
+                            clic->position.y
+                        },
+                        vistaLogica
+                    );
+
+
+                //-------------------------------------------------
+                // VER CALIFICACIONES
+                //-------------------------------------------------
+
+                sf::FloatRect botonCalificaciones(
+                    {675.f, 460.f},
+                    {150.f, 40.f}
+                );
+
+                if(botonCalificaciones.contains(posicionMouse))
+                {
+                    /*
+                     * Aquí NO usamos alumnosSeleccionados.
+                     *
+                     * La ventana de calificaciones debe mostrar
+                     * TODOS los alumnos inscritos en la materia.
+                     *
+                     * La consulta de las calificaciones se hará
+                     * posteriormente desde el Controller/mainSFML.
+                     */
+
+                    return;
+                }
+
+
+                //-------------------------------------------------
+                // Coordenadas de la lista
+                //-------------------------------------------------
+
+                const float listaX = 315.f;
+                const float listaY = 295.f;
+                const float listaAlto = 135.f;
+
+
+                //-------------------------------------------------
+                // Revisar cada alumno
+                //-------------------------------------------------
+
+                for(std::size_t i = 0;
+                    i < alumnosMateria.size();
+                    ++i)
+                {
+                    float y =
+                        listaY +
+                        8.f +
+                        static_cast<float>(i) * 42.f -
+                        desplazamientoAlumnos;
+
+
+                    //-------------------------------------------------
+                    // Ignorar alumnos fuera del área visible
+                    //-------------------------------------------------
+
+                    if(y < listaY ||
+                       y > listaY + listaAlto - 36.f)
+                    {
+                        continue;
+                    }
+
+
+                    //-------------------------------------------------
+                    // Área seleccionable
+                    //-------------------------------------------------
+
+                    sf::FloatRect areaSeleccion(
+                        {listaX + 15.f, y},
+                        {500.f, 36.f}
+                    );
+
+
+                    //-------------------------------------------------
+                    // Clic sobre el alumno
+                    //-------------------------------------------------
+
+                    if(areaSeleccion.contains(posicionMouse))
+                    {
+                        alternarAlumnoSeleccionado(
+                            alumnosMateria[i].id
+                        );
+
+                        return;
+                    }
+                }
+            }
+        }
 
         return;
     }
@@ -375,8 +519,8 @@ void MateriasView::draw(
 
     sf::Text textoRegresar(
         font,
-        "Regresar al Dashboard",
-        16
+        "  Regresar ",
+        23
     );
 
     textoRegresar.setFillColor(
@@ -1464,79 +1608,43 @@ void MateriasView::draw(
         // Fondo de ventana
         //-------------------------------------------------
 
-        sf::RectangleShape fondoModal(
-            sf::Vector2f(
+        sf::RectangleShape fondoModal(sf::Vector2f(
                 720.f,
                 500.f
-            )
-        );
+        ));
 
-        fondoModal.setPosition(
-            sf::Vector2f(
+        fondoModal.setPosition(sf::Vector2f(
                 280.f,
                 120.f
-            )
-        );
+        ));
 
-        fondoModal.setFillColor(
-            tarjetaColor
-        );
+        fondoModal.setFillColor(tarjetaColor);
+        fondoModal.setOutlineThickness(2.f);
+        fondoModal.setOutlineColor(encabezadoColor);
 
-        fondoModal.setOutlineThickness(
-            2.f
-        );
+        window.draw(fondoModal);
 
-        fondoModal.setOutlineColor(
-            encabezadoColor
-        );
-
-        window.draw(
-            fondoModal
-        );
-
-
-        //-------------------------------------------------
+        
         // Buscar nombre de materia
-        //-------------------------------------------------
-
-        std::string nombreMateria =
-            "Materia";
+        std::string nombreMateria = "Materia";
 
 
         for(const auto& materia : Materias)
         {
-            if(materia.getId() ==
-               idMateriaSeleccionada)
+            if(materia.getId() == idMateriaSeleccionada)
             {
-                nombreMateria =
-                    materia.getNombre();
+                nombreMateria = materia.getNombre();
 
                 break;
             }
         }
 
 
-        //-------------------------------------------------
         // Titulo
-        //-------------------------------------------------
+        sf::Text tituloModal(font,"Alumnos de " + nombreMateria,24);
 
-        sf::Text tituloModal(
-            font,
-            "Alumnos de " +
-                nombreMateria,
-            24
-        );
-
-        tituloModal.setFillColor(
-            textoNegro
-        );
-
-        tituloModal.setPosition(
-            sf::Vector2f(
-                315.f,
-                145.f
-            )
-        );
+        tituloModal.setFillColor(textoNegro);
+        tituloModal.setPosition(sf::Vector2f(315.f,145.f));
 
         window.draw(tituloModal);
 
@@ -1545,25 +1653,15 @@ void MateriasView::draw(
         // Cantidad
         //-------------------------------------------------
 
-        sf::Text cantidad(
-            font,
-            std::to_string(
-                alumnosMateria.size()
-            ) +
-            " alumnos inscritos",
-            16
-        );
+        sf::Text cantidad(font,std::to_string(alumnosMateria.size()) +
+            " alumnos inscritos",16);
 
-        cantidad.setFillColor(
-            encabezadoColor
-        );
+        cantidad.setFillColor(encabezadoColor);
 
-        cantidad.setPosition(
-            sf::Vector2f(
-                315.f,
-                185.f
-            )
-        );
+        cantidad.setPosition(sf::Vector2f(
+            315.f,
+            185.f
+        ));
 
         window.draw(cantidad);
 
@@ -1572,22 +1670,14 @@ void MateriasView::draw(
         // Texto para boletas
         //-------------------------------------------------
 
-        sf::Text textoBoletas(
-            font,
-            "Boletas para inscribir:",
-            15
-        );
+        sf::Text textoBoletas(font,"Boletas para inscribir:",15);
 
-        textoBoletas.setFillColor(
-            textoNegro
-        );
+        textoBoletas.setFillColor(textoNegro);
 
-        textoBoletas.setPosition(
-            sf::Vector2f(
-                315.f,
-                210.f
-            )
-        );
+        textoBoletas.setPosition(sf::Vector2f(
+            315.f,
+            210.f
+        ));
 
         window.draw(textoBoletas);
 
@@ -1606,36 +1696,26 @@ void MateriasView::draw(
             38.f
         );
 
-        txtBoletasAlumno.draw(
-            window,
-            font
-        );
+        txtBoletasAlumno.draw(window,font);
 
 
         //-------------------------------------------------
         // Ayuda
         //-------------------------------------------------
 
-        sf::Text ayudaBoletas(
-            font,
-            "Puedes escribir una o varias boletas separadas por coma.",
-            12
-        );
+        sf::Text ayudaBoletas(font,
+            "Puedes escribir una o varias boletas separadas por coma.",12);
 
-        ayudaBoletas.setFillColor(
-            sf::Color(
-                100,
-                100,
-                100
-            )
-        );
+        ayudaBoletas.setFillColor(sf::Color(
+            100,
+            100,
+            100
+        ));
 
-        ayudaBoletas.setPosition(
-            sf::Vector2f(
-                315.f,
-                274.f
-            )
-        );
+        ayudaBoletas.setPosition(sf::Vector2f(
+            315.f,
+            274.f
+        ));
 
         window.draw(ayudaBoletas);
 
@@ -1645,39 +1725,24 @@ void MateriasView::draw(
         //-------------------------------------------------
 
         const float listaX = 315.f;
-
         const float listaY = 295.f;
-
         const float listaAncho = 650.f;
-
         const float listaAlto = 135.f;
 
 
-        sf::RectangleShape areaLista(
-            sf::Vector2f(
-                listaAncho,
-                listaAlto
-            )
-        );
+        sf::RectangleShape areaLista(sf::Vector2f(
+            listaAncho,
+            listaAlto
+        ));
 
-        areaLista.setPosition(
-            sf::Vector2f(
-                listaX,
-                listaY
-            )
-        );
+        areaLista.setPosition(sf::Vector2f(
+            listaX,
+            listaY
+        ));
 
-        areaLista.setFillColor(
-            tarjetaColor
-        );
-
-        areaLista.setOutlineThickness(
-            1.f
-        );
-
-        areaLista.setOutlineColor(
-            bordeTarjeta
-        );
+        areaLista.setFillColor(tarjetaColor);
+        areaLista.setOutlineThickness(1.f);
+        areaLista.setOutlineColor(bordeTarjeta);
 
         window.draw(areaLista);
 
@@ -1688,66 +1753,35 @@ void MateriasView::draw(
 
         if(alumnosMateria.empty())
         {
-            sf::Text sinAlumnos(
-                font,
-                "No hay alumnos inscritos.",
-                18
-            );
-
-            sinAlumnos.setFillColor(
-                textoNegro
-            );
-
-            sinAlumnos.setPosition(
-                sf::Vector2f(
-                    500.f,
-                    345.f
-                )
-            );
+            sf::Text sinAlumnos(font,"No hay alumnos inscritos.",18);
+            sinAlumnos.setFillColor(textoNegro);
+            sinAlumnos.setPosition(sf::Vector2f(500.f,345.f));
 
             window.draw(sinAlumnos);
         }
         else
         {
-            for(std::size_t i = 0;
-                i < alumnosMateria.size();
-                ++i)
+            for(std::size_t i = 0; i < alumnosMateria.size(); ++i)
             {
-                float y =
-                    listaY +
-                    8.f +
-                    static_cast<float>(i) *
-                    42.f -
-                    desplazamientoAlumnos;
+                float y = listaY + 8.f + static_cast<float>(i) *
+                    42.f - desplazamientoAlumnos;
 
 
-                //-------------------------------------------------
+                
                 // Evitar dibujar fuera del area
-                //-------------------------------------------------
-
-                if(y < listaY ||
-                   y > listaY + listaAlto - 36.f)
+                if(y < listaY || y > listaY + listaAlto - 36.f)
                 {
                     continue;
                 }
 
 
-                //-------------------------------------------------
                 // Verificar si está seleccionado
-                //-------------------------------------------------
-
                 bool seleccionado = false;
 
 
-                for(
-                    int id :
-                    alumnosSeleccionados
-                )
+                for(int id : alumnosSeleccionados)
                 {
-                    if(
-                        id ==
-                        alumnosMateria[i].id
-                    )
+                    if(id == alumnosMateria[i].id)
                     {
                         seleccionado = true;
                         break;
@@ -1755,10 +1789,7 @@ void MateriasView::draw(
                 }
 
 
-                //-------------------------------------------------
                 // Fondo alumno
-                //-------------------------------------------------
-
                 sf::RectangleShape filaAlumno(
                     sf::Vector2f(
                         620.f,
@@ -1776,25 +1807,16 @@ void MateriasView::draw(
 
                 if(seleccionado)
                 {
-                    filaAlumno.setFillColor(
-                        azulClaro
-                    );
+                    filaAlumno.setFillColor(azulClaro);
+                    filaAlumno.setOutlineColor(sf::Color(50,120,220));
+                    filaAlumno.setOutlineThickness(2.f);
                 }
                 else
                 {
-                    filaAlumno.setFillColor(
-                        tarjetaColor
-                    );
+                    filaAlumno.setFillColor(tarjetaColor);
+                    filaAlumno.setOutlineColor(bordeTarjeta);
+                    filaAlumno.setOutlineThickness(1.f);
                 }
-
-
-                filaAlumno.setOutlineThickness(
-                    1.f
-                );
-
-                filaAlumno.setOutlineColor(
-                    bordeTarjeta
-                );
 
                 window.draw(filaAlumno);
 
@@ -1821,13 +1843,16 @@ void MateriasView::draw(
                     tarjetaColor
                 );
 
-                checkbox.setOutlineThickness(
-                    2.f
-                );
+                checkbox.setOutlineThickness(2.f);
 
-                checkbox.setOutlineColor(
-                    encabezadoColor
-                );
+                if(seleccionado)
+                {
+                    checkbox.setOutlineColor(sf::Color(50,120,220));
+                }
+                else
+                {
+                    checkbox.setOutlineColor(encabezadoColor);
+                }
 
                 window.draw(checkbox);
 
@@ -2070,60 +2095,223 @@ void MateriasView::draw(
             )
         );
 
-        window.draw(
-            textoDesinscribir
-        );
+        window.draw(textoDesinscribir);
+
+
+        //-------------------------------------------------
+        // Botón ver calificaciones
+        //-------------------------------------------------
+
+        sf::RectangleShape botonCalificaciones(sf::Vector2f(
+            150.f,
+            40.f
+        ));
+
+        botonCalificaciones.setPosition(sf::Vector2f(
+            675.f,
+            460.f
+        ));
+
+        botonCalificaciones.setFillColor(encabezadoColor);
+
+        window.draw(botonCalificaciones);
+
+
+        //-------------------------------------------------
+        // Texto del botón
+        //-------------------------------------------------
+
+        sf::Text textoCalificaciones(font,"Ver calificaciones",13);
+
+        textoCalificaciones.setFillColor(textoBlanco);
+
+        textoCalificaciones.setPosition(sf::Vector2f(
+            687.f,
+            472.f
+        ));
+
+        window.draw(textoCalificaciones);
 
 
         //-------------------------------------------------
         // Botón cerrar
         //-------------------------------------------------
 
-        sf::RectangleShape botonCerrar(
-            sf::Vector2f(
+        sf::RectangleShape botonCerrar(sf::Vector2f(
                 125.f,
                 40.f
-            )
-        );
+            ));
 
-        botonCerrar.setPosition(
-            sf::Vector2f(
+        botonCerrar.setPosition(sf::Vector2f(
                 840.f,
                 460.f
-            )
-        );
+            ));
 
-        botonCerrar.setFillColor(
-            grisBoton
-        );
+        botonCerrar.setFillColor(grisBoton);
 
-        window.draw(
-            botonCerrar
-        );
+        window.draw(botonCerrar);
 
 
-        sf::Text textoCerrar(
-            font,
-            "Cerrar",
-            16
-        );
+        sf::Text textoCerrar(font,"Cerrar",16);
+        textoCerrar.setFillColor(textoBlanco);
+        textoCerrar.setPosition(sf::Vector2f(875.f,471.f));
 
-        textoCerrar.setFillColor(
-            textoBlanco
-        );
-
-        textoCerrar.setPosition(
-            sf::Vector2f(
-                875.f,
-                471.f
-            )
-        );
-
-        window.draw(
-            textoCerrar
-        );
+        window.draw(textoCerrar);
     }
 
+    ////////////////////////////////////////////////////
+    // VENTANA DE CALIFICACIONES DE ALUMNOS
+    ////////////////////////////////////////////////////
+
+    if(mostrandoCalificacionesAlumnos)
+    {
+    
+        // Fondo de la ventana
+        sf::RectangleShape fondo(sf::Vector2f(720.f,500.f));
+
+        fondo.setPosition(sf::Vector2f(280.f,120.f));
+        fondo.setFillColor(sf::Color(245,245,245));
+    
+        window.draw(fondo);
+
+        // Título
+        sf::Text titulo(font,"Calificaciones de alumnos",22);
+
+        titulo.setFillColor(encabezadoColor);
+        titulo.setPosition(sf::Vector2f(315.f,145.f));
+
+        window.draw(titulo);
+
+
+        //-------------------------------------------------
+        // Encabezados
+        //-------------------------------------------------
+
+        sf::Text encabezadoAlumno(font,"Alumno",15);
+
+        encabezadoAlumno.setFillColor(encabezadoColor);
+        encabezadoAlumno.setPosition(sf::Vector2f(315.f,190.f));
+
+        window.draw(encabezadoAlumno);
+
+
+        sf::Text encabezadoIdentificador(font,"Boleta",15);
+
+        encabezadoIdentificador.setFillColor(encabezadoColor);
+        encabezadoIdentificador.setPosition(sf::Vector2f(600.f,190.f));
+
+        window.draw(encabezadoIdentificador);
+
+
+        sf::Text encabezadoCalificacion(font,"Calificacion",15);
+
+        encabezadoCalificacion.setFillColor(encabezadoColor);
+        encabezadoCalificacion.setPosition(sf::Vector2f(790.f,190.f));
+
+        window.draw(encabezadoCalificacion);
+
+        // Línea separadora
+        sf::RectangleShape linea(sf::Vector2f(650.f,2.f));
+
+        linea.setPosition(sf::Vector2f(315.f,215.f));
+        linea.setFillColor(encabezadoColor);
+
+        window.draw(linea);
+
+        // Lista de alumnos
+        const float listaX = 315.f;
+        const float listaY = 230.f;
+        const float filaAlto = 42.f;
+
+        for(std::size_t i = 0; i < calificacionesAlumnos.size(); ++i)
+        {
+            const auto& alumno = calificacionesAlumnos[i];
+
+            float y = listaY + static_cast<float>(i) * filaAlto;
+
+            // Fondo de la fila
+            sf::RectangleShape fila(sf::Vector2f(650.f,36.f));
+
+            fila.setPosition(sf::Vector2f(listaX,y));
+            fila.setFillColor(sf::Color(235,235,235));
+
+            window.draw(fila);
+
+
+            // Nombre
+            sf::Text nombre(font,alumno.nombre,14);
+
+            nombre.setFillColor(sf::Color::Black);
+            nombre.setPosition(sf::Vector2f(listaX + 10.f,y + 8.f));
+
+            window.draw(nombre);
+
+            // Identificador / boleta
+            sf::Text identificador(font,alumno.identificador,14);
+
+            identificador.setFillColor(sf::Color::Black);
+            identificador.setPosition(sf::Vector2f(600.f,y + 8.f));
+
+            window.draw(identificador);
+
+
+            //-------------------------------------------------
+            // Calificación
+            //-------------------------------------------------
+
+            std::string textoCalificacion;
+
+            if(alumno.tieneCalificacion)
+            {
+                std::stringstream ss;
+
+                ss << std::fixed
+                    << std::setprecision(2)
+                    << alumno.calificacion;
+
+                textoCalificacion = ss.str();
+            }
+            else
+            {
+                textoCalificacion = "Sin calificacion";
+            }
+
+            sf::Text calificacion(font,textoCalificacion,14);
+
+            calificacion.setFillColor(sf::Color::Black);
+            calificacion.setPosition(sf::Vector2f(790.f,y + 8.f));
+
+            window.draw(calificacion);
+        }
+
+        // Mensaje cuando no hay alumnos
+        if(calificacionesAlumnos.empty())
+        {
+            sf::Text sinAlumnos(font,"No hay alumnos inscritos.",15);
+
+            sinAlumnos.setFillColor(sf::Color::Black);
+            sinAlumnos.setPosition(sf::Vector2f(315.f,250.f));
+
+            window.draw(sinAlumnos);
+        }
+
+
+        // Botón cerrar
+        sf::RectangleShape botonCerrar(sf::Vector2f(125.f,40.f));
+
+        botonCerrar.setPosition(sf::Vector2f(840.f,460.f));
+        botonCerrar.setFillColor(encabezadoColor);
+
+        window.draw(botonCerrar);
+
+
+        sf::Text textoCerrar(font,"Cerrar",14);
+
+        textoCerrar.setFillColor(textoBlanco);
+        textoCerrar.setPosition(sf::Vector2f(875.f,472.f));
+
+        window.draw(textoCerrar);
+    }
 
     ///////////////////////////////////////////////////////
     // VENTANA PONDERACIONES
@@ -3925,6 +4113,10 @@ bool MateriasView::botonInformacionPresionado(
 // Boton consulta calificacion final
 //////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////
+// Botón consulta calificación final
+///////////////////////////////////////////////////////////
+
 bool MateriasView::botonCalificacionFinalPresionado(
     const sf::RenderWindow& window,
     const sf::Event& event
@@ -3952,6 +4144,9 @@ bool MateriasView::botonCalificacionFinalPresionado(
 
     return boton.contains(posicion);
 }
+
+
+
 
 //////////////////////////////////////////////////////////
 //Boton cerrar infomacion
@@ -4309,8 +4504,8 @@ bool MateriasView::botonCancelarPonderacionPresionado(
 }
 
 ///////////////////////////////////////////////////////////
-// Getter/Setter calificacion final
-//////////////////////////////////////////////////////////
+// Getter / Setter calificación final
+///////////////////////////////////////////////////////////
 
 void MateriasView::setCalificacionFinal(double calificacion)
 {
@@ -4589,8 +4784,125 @@ bool MateriasView::estaMostrandoAlumnos() const
     return mostrandoAlumnos;
 }
 
+///////////////////////////////////////////////////////////
+// Boton calificación final profesor
+///////////////////////////////////////////////////////////
+
+bool MateriasView::botonCalificacionesAlumnosPresionado(
+    const sf::RenderWindow& window,
+    const sf::Event& event
+)
+{
+    if(!mostrandoAlumnos)
+    {
+        return false;
+    }
+
+    if(!event.is<sf::Event::MouseButtonPressed>())
+    {
+        return false;
+    }
+
+    const auto* mouse =
+        event.getIf<sf::Event::MouseButtonPressed>();
+
+    if(mouse->button != sf::Mouse::Button::Left)
+    {
+        return false;
+    }
+
+    sf::Vector2f posicion =
+        window.mapPixelToCoords(mouse->position);
+
+    sf::FloatRect boton(
+        sf::Vector2f(675.f,460.f),
+        sf::Vector2f(150.f,40.f)
+    );
+
+    return boton.contains(posicion);
+}
+
+///////////////////////////////////////////////////////////
+//  Boton calificación final profesor presionado
+///////////////////////////////////////////////////////////
+
+bool MateriasView::botonCerrarCalificacionesAlumnosPresionado(
+    const sf::RenderWindow& window,
+    const sf::Event& event
+)
+{
+    if(!mostrandoCalificacionesAlumnos)
+    {
+        return false;
+    }
+
+    if(!event.is<sf::Event::MouseButtonPressed>())
+    {
+        return false;
+    }
+
+    const auto* mouse =
+        event.getIf<sf::Event::MouseButtonPressed>();
+
+    if(mouse->button != sf::Mouse::Button::Left)
+    {
+        return false;
+    }
+
+    sf::Vector2f posicion =
+        window.mapPixelToCoords(mouse->position);
+
+    sf::FloatRect boton(
+        sf::Vector2f(840.f,460.f),
+        sf::Vector2f(125.f,40.f)
+    );
+
+    return boton.contains(posicion);
+}
+
+///////////////////////////////////////////////////////////
+// Mostrar calificaciones de los alumnos inscritos
+///////////////////////////////////////////////////////////
+
+bool MateriasView::estaMostrandoCalificacionesAlumnos() const
+{
+    return mostrandoCalificacionesAlumnos;
+}
+
+///////////////////////////////////////////////////////////
+// Set calificaciones finales
+///////////////////////////////////////////////////////////
+
+void MateriasView::setCalificacionesAlumnos(
+    const std::vector<CalificacionAlumno>& lista
+)
+{
+    calificacionesAlumnos = lista;
+
+    mostrandoCalificacionesAlumnos = true;
+}
+
+///////////////////////////////////////////////////////////
+// Limpiar calificaciones finales
+///////////////////////////////////////////////////////////
+
+void MateriasView::limpiarCalificacionesAlumnos()
+{
+    calificacionesAlumnos.clear();
+
+    mostrandoCalificacionesAlumnos = false;
+}
 
 
+///////////////////////////////////////////////////////////
+// Obtener calificaciones finales 
+///////////////////////////////////////////////////////////
+
+const std::vector<MateriasView::CalificacionAlumno>&
+MateriasView::obtenerCalificacionesAlumnos() const
+{
+    return calificacionesAlumnos;
+}
 
 ///////////////////////////////////////////////////////////
 // Cerrar formularios

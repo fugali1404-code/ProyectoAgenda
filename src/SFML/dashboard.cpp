@@ -73,6 +73,7 @@ void DashboardView::draw(
     sf::Color textoBlanco(255,255,255);
     sf::Color textoNegro(40,40,40);
     sf::Color bordeTarjeta(220,220,220);
+    sf::Color botonColor(55,70,85);
 
     //-----------------------------------
     // BARRA LATERAL
@@ -125,7 +126,7 @@ void DashboardView::draw(
     sf::Text alumno(font);
 
     alumno.setString(
-        "Alumno:\n" +
+        "Usuario:\n" +
         nombreAlumno
     );
 
@@ -148,7 +149,7 @@ void DashboardView::draw(
     sf::Text txtBoleta(font);
 
     txtBoleta.setString(
-        "Boleta:\n" +
+        "Identificador:\n" +
         boleta
     );
 
@@ -194,12 +195,32 @@ void DashboardView::draw(
     // MENU
     //-----------------------------------
 
+    float posicionY = 320.f;
+
     //-----------------------------------
     // PLANNER
     //-----------------------------------
 
     if(rol == "Alumno")
     {
+        sf::RectangleShape botonPlanner;
+
+        botonPlanner.setSize(
+            {210.f,50.f}
+        );
+
+        botonPlanner.setPosition(
+            {20.f,posicionY}
+        );
+
+        botonPlanner.setFillColor(
+            botonColor
+        );
+
+        window.draw(
+            botonPlanner
+        );
+
         sf::Text planner(font);
 
         planner.setString(
@@ -215,17 +236,37 @@ void DashboardView::draw(
         );
 
         planner.setPosition(
-            {30.f,320.f}
+            {35.f,posicionY + 10.f}
         );
 
         window.draw(
             planner
         );
+
+        posicionY += 60.f;
     }
 
     //-----------------------------------
     // MATERIAS
     //-----------------------------------
+
+    sf::RectangleShape botonMaterias;
+
+    botonMaterias.setSize(
+        {210.f,50.f}
+    );
+
+    botonMaterias.setPosition(
+        {20.f,posicionY}
+    );
+
+    botonMaterias.setFillColor(
+        botonColor
+    );
+
+    window.draw(
+        botonMaterias
+    );
 
     sf::Text materias(font);
 
@@ -241,26 +282,37 @@ void DashboardView::draw(
         textoBlanco
     );
 
-    if(rol == "Alumno")
-    {
-        materias.setPosition(
-            {30.f,380.f}
-        );
-    }
-    else
-    {
-        materias.setPosition(
-            {30.f,320.f}
-        );
-    }
+    materias.setPosition(
+        {35.f,posicionY + 10.f}
+    );
 
     window.draw(
         materias
     );
 
+    posicionY += 60.f;
+
     //-----------------------------------
     // TAREAS
     //-----------------------------------
+
+    sf::RectangleShape botonTareas;
+
+    botonTareas.setSize(
+        {210.f,50.f}
+    );
+
+    botonTareas.setPosition(
+        {20.f,posicionY}
+    );
+
+    botonTareas.setFillColor(
+        botonColor
+    );
+
+    window.draw(
+        botonTareas
+    );
 
     sf::Text tareas(font);
 
@@ -276,22 +328,15 @@ void DashboardView::draw(
         textoBlanco
     );
 
-    if(rol == "Alumno")
-    {
-        tareas.setPosition(
-            {30.f,440.f}
-        );
-    }
-    else
-    {
-        tareas.setPosition(
-            {30.f,380.f}
-        );
-    }
+    tareas.setPosition(
+        {35.f,posicionY + 10.f}
+    );
 
     window.draw(
         tareas
     );
+
+    posicionY += 60.f;
 
     //-----------------------------------
     // NOTIFICACIONES
@@ -299,6 +344,24 @@ void DashboardView::draw(
 
     if(rol == "Alumno")
     {
+        sf::RectangleShape botonNotificaciones;
+
+        botonNotificaciones.setSize(
+            {210.f,50.f}
+        );
+
+        botonNotificaciones.setPosition(
+            {20.f,posicionY}
+        );
+
+        botonNotificaciones.setFillColor(
+            botonColor
+        );
+
+        window.draw(
+            botonNotificaciones
+        );
+
         sf::Text notificaciones(font);
 
         notificaciones.setString(
@@ -314,7 +377,7 @@ void DashboardView::draw(
         );
 
         notificaciones.setPosition(
-            {30.f,500.f}
+            {35.f,posicionY + 10.f}
         );
 
         window.draw(
@@ -323,7 +386,7 @@ void DashboardView::draw(
     }
 
     //-----------------------------------
-    // TARJETA TAREAS
+    // TARJETA BIENVENIDA
     //-----------------------------------
 
     sf::RectangleShape tarjeta1;
@@ -352,70 +415,73 @@ void DashboardView::draw(
         tarjeta1
     );
 
-    sf::Text prox(font);
+    //-----------------------------------
+    // TITULO BIENVENIDA
+    //-----------------------------------
 
-    prox.setString(
-        "Proximas tareas"
+    sf::Text bienvenida(font);
+
+    bienvenida.setString(
+        "Bienvenido a Agenda Academica"
     );
 
-    prox.setCharacterSize(
+    bienvenida.setCharacterSize(
         28
     );
 
-    prox.setFillColor(
+    bienvenida.setFillColor(
         textoNegro
     );
 
-    prox.setPosition(
-        {320.f,70.f}
+    bienvenida.setPosition(
+        {320.f,80.f}
     );
 
     window.draw(
-        prox
+        bienvenida
     );
 
-    sf::Text tarea1(font);
+    //-----------------------------------
+    // MENSAJE SEGUN EL ROL
+    //-----------------------------------
 
-    tarea1.setString(
-        "- Proyecto Final Programacion"
-    );
+    sf::Text mensaje(font);
 
-    tarea1.setCharacterSize(
+    if(rol == "Alumno")
+    {
+        mensaje.setString(
+            "Consulta tus materias, tareas,\n"
+            "planner y notificaciones."
+        );
+    }
+    else if(rol == "Profesor")
+    {
+        mensaje.setString(
+            "Administra tus materias y tareas\n"
+            "desde el menu."
+        );
+    }
+    else
+    {
+        mensaje.setString(
+            "Selecciona una opcion del menu."
+        );
+    }
+
+    mensaje.setCharacterSize(
         20
     );
 
-    tarea1.setFillColor(
+    mensaje.setFillColor(
         textoNegro
     );
 
-    tarea1.setPosition(
-        {330.f,130.f}
+    mensaje.setPosition(
+        {330.f,135.f}
     );
 
     window.draw(
-        tarea1
-    );
-
-    sf::Text tarea2(font);
-
-    tarea2.setString(
-        "- Reporte de Fisica"
-    );
-
-    tarea2.setCharacterSize(
-        20
-    );
-
-    tarea2.setFillColor(
-        textoNegro
-    );
-
-    tarea2.setPosition(
-        {330.f,170.f}
-    );
-
-    window.draw(
-        tarea2
+        mensaje
     );
 
     //-----------------------------------
@@ -746,6 +812,194 @@ void DashboardView::draw(
             barraScroll
         );
     }
+}
+
+//-----------------------------------
+// BOTON MATERIAS
+//-----------------------------------
+
+bool DashboardView::botonMateriasPresionado(
+    const sf::RenderWindow& window,
+    const sf::Event& event
+)
+{
+    if(!event.is<sf::Event::MouseButtonPressed>())
+    {
+        return false;
+    }
+
+    const auto* mouse =
+        event.getIf<
+        sf::Event::MouseButtonPressed>();
+
+    if(mouse == nullptr)
+    {
+        return false;
+    }
+
+    if(mouse->button != sf::Mouse::Button::Left)
+    {
+        return false;
+    }
+
+    sf::Vector2f posicion =
+        window.mapPixelToCoords(
+            mouse->position
+        );
+
+    float y = 320.f;
+
+    if(rol == "Alumno")
+    {
+        y = 380.f;
+    }
+
+    return (
+        posicion.x >= 20.f &&
+        posicion.x <= 230.f &&
+        posicion.y >= y &&
+        posicion.y <= y + 50.f
+    );
+}
+
+//-----------------------------------
+// BOTON TAREAS
+//-----------------------------------
+
+bool DashboardView::botonTareasPresionado(
+    const sf::RenderWindow& window,
+    const sf::Event& event
+)
+{
+    if(!event.is<sf::Event::MouseButtonPressed>())
+    {
+        return false;
+    }
+
+    const auto* mouse =
+        event.getIf<
+        sf::Event::MouseButtonPressed>();
+
+    if(mouse == nullptr)
+    {
+        return false;
+    }
+
+    if(mouse->button != sf::Mouse::Button::Left)
+    {
+        return false;
+    }
+
+    sf::Vector2f posicion =
+        window.mapPixelToCoords(
+            mouse->position
+        );
+
+    float y = 380.f;
+
+    if(rol == "Alumno")
+    {
+        y = 440.f;
+    }
+
+    return (
+        posicion.x >= 20.f &&
+        posicion.x <= 230.f &&
+        posicion.y >= y &&
+        posicion.y <= y + 50.f
+    );
+}
+
+//-----------------------------------
+// BOTON PLANNER
+//-----------------------------------
+
+bool DashboardView::botonPlannerPresionado(
+    const sf::RenderWindow& window,
+    const sf::Event& event
+)
+{
+    if(rol != "Alumno")
+    {
+        return false;
+    }
+
+    if(!event.is<sf::Event::MouseButtonPressed>())
+    {
+        return false;
+    }
+
+    const auto* mouse =
+        event.getIf<
+        sf::Event::MouseButtonPressed>();
+
+    if(mouse == nullptr)
+    {
+        return false;
+    }
+
+    if(mouse->button != sf::Mouse::Button::Left)
+    {
+        return false;
+    }
+
+    sf::Vector2f posicion =
+        window.mapPixelToCoords(
+            mouse->position
+        );
+
+    return (
+        posicion.x >= 20.f &&
+        posicion.x <= 230.f &&
+        posicion.y >= 320.f &&
+        posicion.y <= 370.f
+    );
+}
+
+//-----------------------------------
+// BOTON NOTIFICACIONES
+//-----------------------------------
+
+bool DashboardView::botonNotificacionesPresionado(
+    const sf::RenderWindow& window,
+    const sf::Event& event
+)
+{
+    if(rol != "Alumno")
+    {
+        return false;
+    }
+
+    if(!event.is<sf::Event::MouseButtonPressed>())
+    {
+        return false;
+    }
+
+    const auto* mouse =
+        event.getIf<
+        sf::Event::MouseButtonPressed>();
+
+    if(mouse == nullptr)
+    {
+        return false;
+    }
+
+    if(mouse->button != sf::Mouse::Button::Left)
+    {
+        return false;
+    }
+
+    sf::Vector2f posicion =
+        window.mapPixelToCoords(
+            mouse->position
+        );
+
+    return (
+        posicion.x >= 20.f &&
+        posicion.x <= 230.f &&
+        posicion.y >= 500.f &&
+        posicion.y <= 550.f
+    );
 }
 
 void DashboardView::manejarEvento(
